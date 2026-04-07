@@ -1,5 +1,4 @@
 "use client"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react" 
 import { mapDetails } from "./data" // File chứa dữ liệu gốc của Huỳnh

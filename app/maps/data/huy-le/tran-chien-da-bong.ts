@@ -2,7 +2,26 @@ export const mapTranChienDaBong = {
   name: "Trận Chiến Đá Bóng",
   creator: "Huy Lê", 
   mode: "Đá Bóng",
-  teamType: "2 đội",
+  
+  // 🎯 GIAO DIỆN: Hiện "5v5" nhìn cho chuyên nghiệp
+  teamType: "5v5",
+  
+  // 🎯 PHÂN LOẠI THỂ LOẠI: Thêm tag thể thao và các yếu tố gameplay nổi bật
+  modeTags: [
+    "Thể thao", 
+    "Cạnh tranh", 
+    "Kỹ năng", 
+    "Hành động",
+    "Esports"
+  ],
+
+  // 🎯 PHÂN LOẠI QUY MÔ: Bao quát hết các kiểu tìm kiếm về số lượng
+  teamTags: [
+    "5v5", 
+    "10 người chơi", 
+    "Multiplayer"
+  ],
+
   shortCode: "#1A00E4", 
   likes: "30",
   plays: "953",

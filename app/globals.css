@@ -4,9 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* --- LIGHT MODE (Sửa lại cho sáng thực sự) --- */
-  --background: oklch(0.98 0.01 250); /* Màu trắng xanh nhạt thanh thoát */
-  --foreground: oklch(0.12 0.01 250); /* Chữ màu tối để dễ đọc */
+  /* --- LIGHT MODE (Màu trắng xanh nhạt thanh thoát) --- */
+  --background: oklch(0.98 0.01 250); 
+  --foreground: oklch(0.12 0.01 250); 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.12 0.01 250);
   --popover: oklch(1 0 0);
@@ -41,7 +41,7 @@
 }
 
 .dark {
-  /* --- DARK GAMING THEME (Giữ nguyên bộ màu Huỳnh gửi) --- */
+  /* --- DARK GAMING THEME --- */
   --background: oklch(0.12 0.01 250);
   --foreground: oklch(0.95 0 0);
   --card: oklch(0.16 0.015 250);
@@ -61,6 +61,8 @@
   --border: oklch(0.25 0.02 250);
   --input: oklch(0.2 0.015 250);
   --ring: oklch(0.65 0.2 250);
+  
+  /* Sidebar cho Dark Mode */
   --sidebar: oklch(0.14 0.01 250);
   --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.65 0.2 250);
@@ -111,7 +113,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* 🎯 Giữ nguyên hiệu ứng trượt mượt mà cho các liên kết neo (#) */
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
+    /* Thêm transition-colors để khi người dùng bật tắt Dark/Light mode nó sẽ chuyển màu từ từ siêu đẹp */
     @apply bg-background text-foreground transition-colors duration-300;
   }
 }

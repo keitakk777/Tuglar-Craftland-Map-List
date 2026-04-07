@@ -1,7 +1,10 @@
 "use client"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react" 
-import { mapDetails } from "./data" // File chứa dữ liệu gốc của Huỳnh
+
+// 🎯 FIX LỖI: Thêm dấu chấm để nhảy ra ngoài 1 cấp tìm thư mục data
+import { mapDetails } from "../data" 
+
 import { EmptyState } from "@/components/empty-state"
 import { MapDetailView } from "@/components/map-detail-view"
 
@@ -9,7 +12,7 @@ export default function MapDetailPage() {
   const params = useParams()
   const mapId = params.id as string
   
-  // 1. PHẢI KHAI BÁO BIẾN data TRƯỚC KHI KIỂM TRA
+  // 🎯 Logic lấy data từ kho chung
   const data = mapDetails[mapId as keyof typeof mapDetails]
   
   const [mounted, setMounted] = useState(false)
@@ -17,8 +20,7 @@ export default function MapDetailPage() {
 
   if (!mounted) return null
 
-  // 🎯 LOGIC CHUNG: TRANG DỮ LIỆU TRỐNG / LỖI
-  // Văn phong đã được "tổng quát hóa" theo yêu cầu
+  // 🎯 LOGIC: TRANG DỮ LIỆU TRỐNG / LỖI
   if (!data) {
     return (
       <EmptyState 

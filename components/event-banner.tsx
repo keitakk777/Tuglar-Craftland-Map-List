@@ -48,48 +48,65 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   }, [targetDate]);
 
   if (!mounted) return <span className="opacity-0">00:00:00</span>;
-  // 🎯 Đã giảm size chữ ở đây để nó luôn nằm trên 1 dòng
-  return <span className="tabular-nums text-lg md:text-xl">{timeLeft}</span>; 
+  return <span className="tabular-nums whitespace-nowrap text-[clamp(0.875rem,3vw,1.25rem)] font-bold leading-none">{timeLeft}</span>; 
 };
 
 // --- DỮ LIỆU MẪU SỰ KIỆN ---
 const EVENTS_DATA = [
   {
     id: 1,
-    tag: "Kiến Trúc Sư",
+    tag: "Cuộc thi",
     title: "KTS Tháng 4:\nCao Thủ Vũ Khí",
     description: "Tháng 4 này, Craftland mang đến thử thách mới dành cho các kiến trúc sư tài năng: thiết kế map xoay quanh chủ đề vũ khí – sáng tạo những đấu trường, khu huấn luyện hoặc chế độ chơi độc đáo.",
-    image: "/banner-homepage/kts-thang3.webp",
+    image: "/banner-homepage/kts thang 4.jpg",
     status: "Đang diễn ra",
     statusColor: "bg-destructive text-destructive-foreground",
     prize: "6000",
     prizeUnit: "Kim cương",
     participants: "128",
-    date: "Từ 1/4 - 20/4", 
+    date: "1/4 - 20/4", 
     endTime: "2026-04-20T23:59:59", 
     actionText: "Tham gia ngay",
-    actionLink: "https://www.facebook.com/groups/craftlandvn/posts/26933664449572676", // 🎯 Link theo yêu cầu
-    hasLiveStream: false // 🎯 Không có livestream
+    actionLink: "https://www.facebook.com/groups/craftlandvn/posts/26933664449572676", 
+    hasLiveStream: false 
   },
   {
     id: 2,
-    tag: "Giải Đấu",
-    title: "Tuglar Championship Mùa 1",
-    description: "Giải đấu sinh tồn khắc nghiệt nhất dành riêng cho các thành viên Tuglar. Hãy chứng tỏ bản lĩnh, lập team chiến đấu và giành lấy vinh quang cùng tổng giải thưởng cực khủng!",
-    image: "/banner-homepage/kts-thang3.webp", 
-    status: "Sắp tới",
-    statusColor: "bg-blue-600 text-white",
-    prize: "20.000",
+    tag: "Cuộc thi",
+    title: "KTS Tháng 3:\nBùng nổ thể thao",
+    description: "Tháng 3 này, Craftland mời bạn thử sức sáng tạo với chủ đề Các môn thể thao. Hãy xây dựng những sân thi đấu, khu thể thao hoặc không gian giải trí năng động để người chơi có thể trải nghiệm và giao lưu trong thế giới Craftland!",
+    image: "/banner-homepage/kts-thang3.webp",
+    status: "Đã kết thúc",
+    statusColor: "bg-muted-foreground text-white",
+    prize: "4900",
     prizeUnit: "Kim cương",
-    participants: "64/100",
-    date: "Từ 15.5 đến 20.5",
-    endTime: "2026-05-15T00:00:00", 
-    actionText: "Đăng ký sớm",
-    actionLink: "https://www.facebook.com/groups/craftlandvn/",
-    hasLiveStream: true // Có livestream
+    participants: "22",
+    date: "11.3 - 29.3", 
+    endTime: "", 
+    actionText: "Đang chờ kết quả",
+    actionLink: "https://www.facebook.com/share/p/1CNYeQ7MxT/", 
+    hasLiveStream: false 
   },
   {
-    id: 3, 
+    id: 3,
+    tag: "Giải đấu",
+    title: "Đại Chiến Bo Cuối",
+    description: "Cơ hội để những tổ đội phối hợp tác chiến và những tay súng tìm kiếm đồng đội mới đã đến! Giải đấu Đại Chiến Bo Cuối với chính thức lộ diện. Bạn đã sẵn sàng chưa?",
+    image: "/banner-homepage/dai chien bo cuoi.jpg", 
+    status: "Đã kết thúc",
+    statusColor: "bg-muted-foreground text-white",
+    prize: "66",
+    prizeUnit: "Vé quay Chế tác",
+    participants: "24",
+    date: "20-21.12.2025", 
+    endTime: "", 
+    actionText: "Xem kết quả",
+    actionLink: "https://www.facebook.com/share/p/1DXfXuV8Wk/",
+    hasLiveStream: true,
+    liveStreamLink: "https://www.youtube.com/watch?v=s7wM6JZ7BKI&t=3986s", 
+  },
+  {
+   id: 4, 
     tag: "Cuộc thi",
     title: "Anh Trai Xây Map\n2025",
     description: "Giải đấu trải qua 2 vòng thi đầy kịch tính, nơi các kiến trúc sư tranh tài để thiết kế những bản đồ đỉnh cao nhất. Các map xuất sắc sẽ được 'Anh Trai' đích thân lựa chọn để quảng bá rộng rãi trong cộng đồng Craftland.",
@@ -99,28 +116,11 @@ const EVENTS_DATA = [
     prize: "260.000",
     prizeUnit: "VNĐ", 
     participants: "8",
-    date: "Từ 1.9.2025 đến 30.9.2025",
+    date: "1-30.9.2025", 
     endTime: "", 
     actionText: "Xem kết quả",
     actionLink: "https://www.facebook.com/tuglar.craftland/posts/pfbid0FYxWm1cCiqnbRUdm1XHLDZn6S1RdYjdkEw9SM38WYGUUwYTZbWfzDjFK269kVgQ7l",
-    hasLiveStream: false // 🎯 Không có livestream
-  },
-  {
-    id: 4,
-    tag: "Minigame",
-    title: "Đua Xe Bắn Súng Đỉnh Cao",
-    description: "Trải nghiệm cảm giác mạnh với map đua xe kết hợp bắn súng. Tốc độ và độ chuẩn xác là chìa khóa chiến thắng. Cạnh tranh trên bảng xếp hạng để nhận kim cương mỗi tuần.",
-    image: "/banner-homepage/kts-thang3.webp", 
-    status: "Đang diễn ra",
-    statusColor: "bg-destructive text-destructive-foreground",
-    prize: "2000",
-    prizeUnit: "Kim cương",
-    participants: "85",
-    date: "Từ 5.4 đến 12.4",
-    endTime: "2026-04-12T23:59:59", 
-    actionText: "Tham gia ngay",
-    actionLink: "https://www.facebook.com/groups/craftlandvn/",
-    hasLiveStream: true // Có livestream
+    hasLiveStream: false  
   }
 ]
 
@@ -222,8 +222,8 @@ export function EventBanner() {
                   <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
                     {activeEvent.tag}
                   </Badge>
-                  {/* leading-[1.1] sẽ giúp khoảng cách dòng vừa đủ đẹp, không quá xa cũng không quá dít */}
-                    <h1 className="text-balance text-3xl font-bold leading-[1.1] md:text-4xl lg:text-5xl md:leading-[1.1] uppercase">
+                  {/* 🎯 Đã sửa leading-[1.1] thành leading-[1.25] để khoảng cách dòng giãn ra, hết bị cắn dấu */}
+                  <h1 className="whitespace-pre-line text-balance text-3xl font-bold leading-[1.25] md:text-4xl lg:text-5xl uppercase">
                     {activeEvent.title}
                   </h1>
                   <p className="mt-4 text-pretty text-muted-foreground md:text-lg leading-relaxed">
@@ -234,43 +234,46 @@ export function EventBanner() {
                 <div className={`grid grid-cols-2 gap-4 ${activeEvent.status === "Đã kết thúc" ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
                   
                   {/* BOX 1: Giải thưởng */}
-                  <div className="rounded-2xl border border-yellow-500/20 bg-muted/20 p-4 hover:border-yellow-500/50 transition-colors flex flex-col justify-center">
-                    <Trophy className="h-5 w-5 text-yellow-500 mb-2" />
-                    <p className="text-xl md:text-2xl font-bold text-foreground leading-tight">{activeEvent.prize}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
+                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                    <Trophy className="mb-1.5 h-4 w-4 text-yellow-500" />
+                    <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
+                      {activeEvent.prize}
+                    </p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       {activeEvent.prizeUnit || "Kim cương"}
                     </p>
                   </div>
                   
                   {/* BOX 2: Tham gia */}
-                  <div className="rounded-2xl border border-yellow-500/20 bg-muted/20 p-4 hover:border-yellow-500/50 transition-colors flex flex-col justify-center">
-                    <Users className="h-5 w-5 text-yellow-500 mb-2" />
-                    <p className="text-xl md:text-2xl font-bold text-foreground leading-tight">{activeEvent.participants}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Tham gia</p>
+                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                    <Users className="mb-1.5 h-4 w-4 text-yellow-500" />
+                    <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
+                      {activeEvent.participants}
+                    </p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tham gia</p>
                   </div>
 
                   {/* BOX 3: Thời gian */}
-                  <div className="rounded-2xl border border-yellow-500/20 bg-muted/20 p-4 hover:border-yellow-500/50 transition-colors flex flex-col justify-center">
-                    <Calendar className="h-5 w-5 text-yellow-500 mb-2 shrink-0" />
-                    <p className="text-base md:text-lg font-bold text-foreground leading-tight break-words">
+                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                    <Calendar className="mb-1.5 h-4 w-4 text-yellow-500 shrink-0" />
+                    <p className="whitespace-nowrap text-[clamp(0.8rem,3vw,1.1rem)] font-bold text-foreground leading-none tracking-tighter">
                       {activeEvent.date}
                     </p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Thời gian</p>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Thời gian</p>
                   </div>
 
-                  {/* BOX 4: Còn lại (SỬ DỤNG COMPONENT ĐẾM NGƯỢC) */}
+                  {/* BOX 4: Còn lại */}
                   {activeEvent.status !== "Đã kết thúc" && (
-                    <div className="rounded-2xl border border-yellow-500/20 bg-muted/20 p-4 hover:border-yellow-500/50 transition-colors flex flex-col justify-center">
-                      <Clock className="h-5 w-5 text-yellow-500 mb-2" />
-                      <p className="font-bold text-foreground leading-tight">
+                    <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                      <Clock className="mb-1.5 h-4 w-4 text-yellow-500" />
+                      <div className="leading-none">
                         <CountdownTimer targetDate={activeEvent.endTime} />
-                      </p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Còn lại</p>
+                      </div>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Còn lại</p>
                     </div>
                   )}
                 </div>
                 
-                {/* 🎯 CỤM NÚT BẤM (Đã sửa Link và điều kiện hiển thị Watch Live) */}
                 <div className="flex flex-wrap gap-3 mt-2">
                   <a href={activeEvent.actionLink} target="_blank" rel="noopener noreferrer">
                     <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold uppercase tracking-wider rounded-xl h-12 px-8 shadow-md shadow-yellow-500/20">
@@ -278,11 +281,14 @@ export function EventBanner() {
                     </Button>
                   </a>
                   
-                  {activeEvent.hasLiveStream && (
-                    <Button size="lg" variant="outline" className="gap-2 border-border/50 hover:bg-muted/50 hover:text-yellow-600 font-bold uppercase tracking-wider rounded-xl h-12">
-                      <PlayCircle className="h-4 w-4" />
-                      Watch Live
-                    </Button>
+                  {/* 🎯 ĐÃ BỌC THẺ A VÀO NÚT WATCH LIVE */}
+                  {activeEvent.hasLiveStream && activeEvent.liveStreamLink && (
+                    <a href={activeEvent.liveStreamLink} target="_blank" rel="noopener noreferrer">
+                      <Button size="lg" variant="outline" className="gap-2 border-border/50 hover:bg-muted/50 hover:text-yellow-600 font-bold uppercase tracking-wider rounded-xl h-12">
+                        <PlayCircle className="h-4 w-4" />
+                        Watch Live
+                      </Button>
+                    </a>
                   )}
                 </div>
               </motion.div>

@@ -2,6 +2,12 @@ import { ThemeProvider } from "@/components/theme-provider"
 import type { Metadata } from 'next'
 import { Be_Vietnam_Pro } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
+// 🎯 BƯỚC QUAN TRỌNG: Import Header vào đây! 
+// (Lưu ý: Nếu file header.tsx của ní nằm ở thư mục khác, hãy sửa lại đường dẫn import cho đúng nhé)
+import { Header } from "@/components/header" 
+
 import './globals.css'
 
 const vietnameseFont = Be_Vietnam_Pro({ 
@@ -14,7 +20,6 @@ export const metadata: Metadata = {
   title: 'Tuglar Craftland - Competitive Gaming',
   description: 'Khám phá bản đồ, tham gia sự kiện và cập nhật tin tức mới nhất từ Tuglar Craftland',
   generator: 'v0.app',
-  /* ... Giữ nguyên phần icons của Huỳnh ... */
 }
 
 export default function RootLayout({
@@ -25,16 +30,29 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${vietnameseFont.className} antialiased`}>
-        {/* ĐÂY LÀ CHỖ QUAN TRỌNG NHẤT ĐỂ DARK MODE CHẠY ĐƯỢC */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark" // Để mặc định là tối cho ngầu đúng chất Tuglar
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* 🎯 ĐẶT HEADER Ở ĐÂY ĐỂ NÓ HIỆN TRÊN TẤT CẢ CÁC TRANG */}
+          <Header />
+          
+          {/* Nội dung của từng trang con sẽ được nhét vào đây */}
+          <main className="min-h-screen">
+            {children}
+          </main>
+          
         </ThemeProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+
+        {/* Cụm Analytics và SpeedInsights của Vercel */}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   )

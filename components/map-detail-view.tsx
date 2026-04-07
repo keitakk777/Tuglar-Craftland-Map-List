@@ -11,6 +11,10 @@ import { motion } from "framer-motion"
 export function MapDetailView({ data }: { data: any }) {
   const [copied, setCopied] = useState(false)
 
+  // 🎯 1. KHAI BÁO ẢNH DỰ PHÒNG (Placeholder)
+  const fallbackImage = "/map-cover/Banner Chưa có.png"
+  const displayBanner = data?.banner || fallbackImage
+
   const cleanCode = data?.shortCode?.replace("#", "") || ""
   const playLink = `https://c.freefiremobile.com/?m=1E441${cleanCode}`
 
@@ -22,7 +26,6 @@ export function MapDetailView({ data }: { data: any }) {
     }
   }
 
-  // 🎯 LOGIC CHECK HUY HIỆU CREATOR (Giữ nguyên)
   const vipCreators = ["blueghast", "huỳnh", "long", "long sensei", "huy", "huy lê", "gh channel"];
   const isVerified = data?.creator && vipCreators.some((vipName: string) => data.creator.toLowerCase().includes(vipName));
 
@@ -40,15 +43,22 @@ export function MapDetailView({ data }: { data: any }) {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
       <main className="container mx-auto px-4 pt-32 pb-12 flex-1">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-yellow-500 mb-8 transition-colors font-semibold uppercase tracking-wider">
+        <Link href="/maps" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-yellow-500 mb-8 transition-colors font-semibold uppercase tracking-wider">
             <ArrowLeft className="h-4 w-4" /> Quay lại danh sách Map
         </Link>
 
         <div className="flex flex-col lg:flex-row gap-10 items-start mb-16">
           {/* CỘT TRÁI */}
           <div className="w-full lg:w-[480px] shrink-0">
-            <div className="relative aspect-[485/220] overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-yellow-500/10">
-              <img src={data.banner} className="h-full w-full object-cover" alt={data.name} />
+            <div className="relative aspect-[485/220] overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-yellow-500/10 bg-muted/20">
+              {/* 🎯 FIX: Sử dụng displayBanner đã được check null/empty */}
+              <img 
+                src={displayBanner} 
+                className="h-full w-full object-cover" 
+                alt={data.name} 
+                onError={(e) => { e.currentTarget.src = fallbackImage }}
+              />
+              
               <div className="absolute bottom-3 left-3 flex gap-2">
                   <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md text-[11px] px-2.5 py-1 rounded-lg text-white border border-white/10 font-semibold">
                       <ThumbsUp className="h-3 w-3 text-yellow-500 fill-yellow-500" />
@@ -95,14 +105,11 @@ export function MapDetailView({ data }: { data: any }) {
             </div>
             
             <div className="grid grid-cols-2 gap-y-5 gap-x-4 mt-8">
-               {/* 🎯 CỘT NGƯỜI TẠO: Đã thay thế icon mặc định bằng Huy hiệu */}
                <div className="flex items-center gap-3">
                   <div className={`h-10 w-10 rounded-xl flex items-center justify-center border ${isVerified ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-muted/40 border-border/50 text-yellow-600'}`}>
                     {isVerified ? (
-                      /* Huy hiệu cho VIP: To và rõ ràng (h-6 w-6) */
                       <img src="/verified-badge.webp" alt="Verified Creator" className="h-6 w-6 object-contain drop-shadow-md" />
                     ) : (
-                      /* Icon mặc định cho Creator thường */
                       <User2 size={20} />
                     )}
                   </div>
@@ -152,7 +159,8 @@ export function MapDetailView({ data }: { data: any }) {
         {/* PHẦN PATCH NOTES & ACHIEVEMENTS */}
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            {data.videoUrl && (
+            {/* 🎯 FIX: Chỉ render khối Preview khi videoUrl thực sự có giá trị (không rỗng) */}
+            {data.videoUrl && data.videoUrl.trim() !== "" && (
               <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm mb-8 overflow-hidden">
                 <h2 className="flex items-center gap-2 text-2xl font-bold mb-6 text-foreground uppercase tracking-tight">
                   <PlayCircle className="h-7 w-7 text-yellow-500" /> Preview

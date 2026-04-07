@@ -38,17 +38,17 @@ const maps = [
     difficulty: 3,
     shortCode: "#1A00E4",
     image: "/map-cover/huy-le/Banner Soccer.jpg",
-    featured: false,
+    featured: true,
   },
   {
     id: 3,
-    name: "Desert Storm",
-    type: "Open World",
-    players: "10v10",
-    favourite: 4.9,
+    name: "2 Player 2D",
+    type: "Parkour",
+    players: "Team 2",
+    favourite: 163,
     difficulty: 2,
-    shortCode: "#EXAMPLE",
-    image: "from-blue-500/40 via-blue-500/20 to-background",
+    shortCode: "#C17O40",
+    image: "/map-cover/hoai-an/Cover Hoài Ân Parkour 2D.webp",
     featured: true,
   },
   {
@@ -125,7 +125,7 @@ export function FeaturedMaps() {
   if (!mounted) return null
 
   return (
-    <section id="maps" className="relative py-8 md:py-12 group select-none">
+    <section id="popular-maps" className="relative py-8 md:py-12 group select-none">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

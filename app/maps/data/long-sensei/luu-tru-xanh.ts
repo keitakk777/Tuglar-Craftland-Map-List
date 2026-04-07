@@ -2,7 +2,26 @@ export const mapLuuTruXanh = {
   name: "Lưu Trữ Xanh",
   creator: "Long Sensei",
   mode: "Tự Do Khám Phá",
-  teamType: "Chiến đấu nhiều đội",
+  
+  // 🎯 HIỂN THỊ UI: Hiện chữ "Solo" trên Card cho gọn
+  teamType: "Solo",
+  
+  // 🎯 PHÂN LOẠI THỂ LOẠI: Những tag này sẽ xuất hiện ở cột "Chế độ chơi"
+  modeTags: [
+    "Anime", 
+    "Blue Archive", 
+    "Nhập vai", 
+    "Khám phá", 
+    "RPG"
+  ],
+
+  // 🎯 PHÂN LOẠI QUY MÔ: Những tag này sẽ xuất hiện ở cột "Số lượng người"
+  teamTags: [
+    "Solo", 
+    "1 người",
+    "Multiplayer"
+  ],
+
   shortCode: "#K25M81", 
   likes: "16.3K",
   plays: "59.7K",

@@ -57,7 +57,7 @@ const EVENTS_DATA = [
   {
     id: 1,
     tag: "Kiến Trúc Sư",
-    title: "Kiến Trúc Sư Tháng 4: Cao Thủ Vũ Khí",
+    title: "KTS Tháng 4:\nCao Thủ Vũ Khí",
     description: "Tháng 4 này, Craftland mang đến thử thách mới dành cho các kiến trúc sư tài năng: thiết kế map xoay quanh chủ đề vũ khí – sáng tạo những đấu trường, khu huấn luyện hoặc chế độ chơi độc đáo.",
     image: "/banner-homepage/kts-thang3.webp",
     status: "Đang diễn ra",
@@ -91,7 +91,7 @@ const EVENTS_DATA = [
   {
     id: 3, 
     tag: "Cuộc thi",
-    title: "Anh Trai Xây Map 2025",
+    title: "Anh Trai Xây Map\n2025",
     description: "Giải đấu trải qua 2 vòng thi đầy kịch tính, nơi các kiến trúc sư tranh tài để thiết kế những bản đồ đỉnh cao nhất. Các map xuất sắc sẽ được 'Anh Trai' đích thân lựa chọn để quảng bá rộng rãi trong cộng đồng Craftland.",
     image: "/banner-homepage/banner-anh-trai-xay-map-2025.jpg",
     status: "Đã kết thúc",
@@ -222,7 +222,8 @@ export function EventBanner() {
                   <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
                     {activeEvent.tag}
                   </Badge>
-                  <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl uppercase">
+                  {/* leading-[1.1] sẽ giúp khoảng cách dòng vừa đủ đẹp, không quá xa cũng không quá dít */}
+                    <h1 className="text-balance text-3xl font-bold leading-[1.1] md:text-4xl lg:text-5xl md:leading-[1.1] uppercase">
                     {activeEvent.title}
                   </h1>
                   <p className="mt-4 text-pretty text-muted-foreground md:text-lg leading-relaxed">

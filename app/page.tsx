@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Header } from "@/components/header"
 import { EventBanner } from "@/components/event-banner"
 import { FeaturedMaps } from "@/components/featured-maps"
@@ -11,7 +12,10 @@ export default function Home() {
       <main>
         <EventBanner />
         <FeaturedMaps />
-        <NewsFeed />
+        
+        {/* 🎯 Tạm ẩn phần NewsFeed (Tin tức & Thống kê) */}
+        {/* <NewsFeed /> */}
+        
       </main>
       <Footer />
     </div>

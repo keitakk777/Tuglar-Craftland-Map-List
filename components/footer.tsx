@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 import { Gamepad2, PlayCircle, Trophy, History } from "lucide-react"
-// 🎯 IMPORT LOGO GỐC: ĐÃ ĐỔI DISCORD THÀNH INSTAGRAM
 import { SiYoutube, SiTiktok, SiFacebook, SiInstagram } from "react-icons/si"
 
 export function Footer() {
@@ -18,9 +17,11 @@ export function Footer() {
               </div>
               <span className="text-xl font-bold tracking-tighter uppercase">Tuglar Craftland</span>
             </Link>
+            {/* 🎯 Thêm class whitespace-pre-line vào đây */}
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              Nhóm sáng tạo nội dung Craftland (Free Fire) hàng đầu tại Việt Nam. 
-              Dẫn dắt bởi <span className="text-yellow-600 font-bold">BlueGhast</span> và những cộng sự tâm huyết.
+              Một đội ngũ Creator Craftland (nghiệp dư) tại Việt Nam!
+              <br /> {/* 🎯 Thêm thẻ này vào đây */}
+              Theo dõi chúng tôi để cập nhật tin tức, bản đồ độc đáo từ thế giới Craftland!
             </p>
           </div>
 
@@ -46,14 +47,16 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* 3. CREATORS */}
+          {/* 3. CREATORS (ĐÃ CẬP NHẬT THEO YÊU CẦU) */}
           <div>
             <h4 className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-foreground">Đội ngũ sáng tạo</h4>
             <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Long Sensei (Long)</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">GH CHANNEL (Huy Lê)</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Văn Chuyên & Hoài Ân</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium italic opacity-70">Tuglar Creators Group</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Huỳnh Nguyễn (BlueGhast)</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Huy Lê (Enderblue)</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoàng Long (Long Sensei)</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoài Ân</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoàng Hiệp</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Bảo My</li>
             </ul>
           </div>
 
@@ -62,7 +65,6 @@ export function Footer() {
             <h4 className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-foreground">Theo dõi Tuglar</h4>
             <p className="text-xs text-muted-foreground mb-6 leading-relaxed">Cập nhật những thông tin mới nhất từ chúng mình qua các nền tảng:</p>
             <div className="flex items-center gap-4">
-              {/* YOUTUBE */}
               <a 
                 href="https://www.youtube.com/@Tuglar.Craftland" 
                 target="_blank" 
@@ -72,7 +74,6 @@ export function Footer() {
                 <SiYoutube className="h-5 w-5" />
               </a>
 
-              {/* TIKTOK */}
               <a 
                 href="https://www.tiktok.com/@tuglar.craftland" 
                 target="_blank" 
@@ -82,7 +83,6 @@ export function Footer() {
                 <SiTiktok className="h-5 w-5" />
               </a>
 
-              {/* FACEBOOK */}
               <a 
                 href="https://www.facebook.com/tuglar.craftland" 
                 target="_blank" 
@@ -92,7 +92,6 @@ export function Footer() {
                 <SiFacebook className="h-5 w-5" />
               </a>
 
-              {/* 🎯 INSTAGRAM: ĐÃ CẬP NHẬT ICON VÀ MÀU HOVER CHUẨN BRAND (#E4405F) */}
               <a 
                 href="https://www.instagram.com/tuglar.craftland" 
                 target="_blank" 

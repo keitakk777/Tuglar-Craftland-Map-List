@@ -125,7 +125,7 @@ export function FeaturedMaps() {
   if (!mounted) return null
 
   return (
-    <section id="maps" className="relative py-8 md:py-12 group">
+    <section id="maps" className="relative py-8 md:py-12 group select-none">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -190,7 +190,8 @@ export function FeaturedMaps() {
                       <img 
                         src={map.image} 
                         alt={map.name} 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/card:scale-105" 
+                        draggable="false"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/card:scale-105 pointer-events-none" 
                       />
                     ) : (
                       <div className={`absolute inset-0 bg-gradient-to-br ${map.image}`} />

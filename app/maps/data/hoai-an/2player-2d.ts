@@ -2,7 +2,8 @@ export const map2Player2D = {
   name: "2 Player 2D",
   creator: "Hoài Ân", 
   mode: "Parkour",
-  
+  difficulty: 2, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
+  featured: true, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
   // 🎯 HIỂN THỊ UI: Đã đổi thành "Team 2" cho gọn đúng ý Leader
   teamType: "Team 2",
   

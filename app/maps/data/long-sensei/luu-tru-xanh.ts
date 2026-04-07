@@ -1,5 +1,7 @@
 export const mapLuuTruXanh = {
   name: "Lưu Trữ Xanh",
+  difficulty: 2, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
+  featured: true, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
   creator: "Long Sensei",
   mode: "Tự Do Khám Phá",
   

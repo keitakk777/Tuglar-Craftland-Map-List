@@ -8,6 +8,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Users, Star, Play, ChevronRight, ChevronLeft, Copy, Check, Flame, Info } from "lucide-react"
 import { motion, useAnimation } from "framer-motion"
 
+// 🎯 BƯỚC 1: IMPORT KHO CHUNG - CHÌA KHÓA ĐỂ ĐỒNG BỘ 100%
+import { mapDetails } from "@/app/maps/data"
+
 const DIFFICULTY_MAP = {
   1: "Siêu Dễ",
   2: "Dễ",
@@ -17,57 +20,30 @@ const DIFFICULTY_MAP = {
   6: "Ác Mộng"
 }
 
-const maps = [
-  {
-    id: 1,
-    name: "Lưu Trữ Xanh",
-    type: "Nhập vai",
-    players: "Solo | Multiplayer",
-    favourite: "59.7K",
-    difficulty: 2,
-    shortCode: "#K25M81",
-    image: "/map-cover/long-sensei/Cover-Luu-Tru-Xanh-v2.6.jpg",
-    featured: true, 
-  },
-  {
-    id: 2,
-    name: "Trận Chiến Đá Bóng",
-    type: "Đá Bóng",
-    players: "5v5",
-    favourite: "953",
-    difficulty: 3,
-    shortCode: "#1A00E4",
-    image: "/map-cover/huy-le/Banner Soccer.jpg",
-    featured: true,
-  },
-  {
-    id: 3,
-    name: "2 Player 2D",
-    type: "Parkour",
-    players: "Team 2",
-    favourite: 163,
-    difficulty: 2,
-    shortCode: "#C17O40",
-    image: "/map-cover/hoai-an/Cover Hoài Ân Parkour 2D.webp",
-    featured: true,
-  },
-  {
-    id: 4,
-    name: "Map Thử Nghiệm",
-    type: "Parkour",
-    players: "Solo",
-    favourite: "1.2K",
-    difficulty: 4,
-    shortCode: "#TEST01",
-    image: "/map-cover/huy-le/Banner Soccer.jpg",
-    featured: false,
-  }
-]
+// 🎯 BƯỚC 2: TỰ ĐỘNG LỌC & CHUẨN HÓA DỮ LIỆU TỪ KHO CHUNG
+const FEATURED_LIST = Object.entries(mapDetails)
+  .map(([key, data]: [string, any]) => {
+    // Chuẩn hóa "1 người" thành "Solo" cho đồng bộ UI
+    const normalizedPlayers = data.teamType === "1 người" ? "Solo" : (data.teamType || "Tự do");
+    
+    return {
+      id: key, 
+      name: data.name,
+      type: data.mode || "Chưa phân loại",
+      players: normalizedPlayers,
+      favourite: data.likes || "0",
+      difficulty: data.difficulty || 3, // Lấy đúng số từ file lẻ của ní
+      shortCode: data.shortCode || "#000000",
+      image: data.banner || "/map-cover/Banner Chưa có.png", 
+      featured: data.featured || false
+    };
+  })
+  .filter(map => map.featured); // Chỉ lấy những map ní đánh dấu là nổi bật
 
 export function FeaturedMaps() {
   const router = useRouter()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
   const controlsLeft = useAnimation()
@@ -109,7 +85,7 @@ export function FeaturedMaps() {
     }
   }
 
-  const handleCopy = (e: React.MouseEvent, code: string, id: number) => {
+  const handleCopy = (e: React.MouseEvent, code: string, id: string) => {
     e.stopPropagation() 
     navigator.clipboard.writeText(code)
     setCopiedId(id)
@@ -140,7 +116,11 @@ export function FeaturedMaps() {
               Khám phá các bản đồ nổi bật nhất đến từ đội ngũ Tuglar Craftland
             </p>
           </div>
-          <Button variant="ghost" className="gap-2 self-start md:self-auto font-bold uppercase text-xs tracking-widest hover:text-yellow-600 hover:bg-yellow-500/10 transition-colors">
+          <Button 
+            onClick={() => router.push('/maps')}
+            variant="ghost" 
+            className="gap-2 self-start md:self-auto font-bold uppercase text-xs tracking-widest hover:text-yellow-600 hover:bg-yellow-500/10 transition-colors"
+          >
             Xem toàn bộ map
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -149,24 +129,15 @@ export function FeaturedMaps() {
         {/* --- CAROUSEL --- */}
         <div className="relative">
           
-          {/* Nút TRÁI - THEME VÀNG */}
+          {/* Nút Điều Hướng */}
           <div className="absolute -left-4 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 group-hover:-left-7 transition-all duration-500 hidden md:block">
-            <motion.button
-              animate={controlsLeft}
-              onClick={() => scroll('left')}
-              className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer"
-            >
+            <motion.button animate={controlsLeft} onClick={() => scroll('left')} className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer">
               <ChevronLeft className="h-8 w-8" />
             </motion.button>
           </div>
 
-          {/* Nút PHẢI - THEME VÀNG */}
           <div className="absolute -right-4 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 group-hover:-right-7 transition-all duration-500 hidden md:block">
-            <motion.button
-              animate={controlsRight}
-              onClick={() => scroll('right')}
-              className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer"
-            >
+            <motion.button animate={controlsRight} onClick={() => scroll('right')} className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer">
               <ChevronRight className="h-8 w-8" />
             </motion.button>
           </div>
@@ -176,26 +147,21 @@ export function FeaturedMaps() {
             className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 px-2 pt-2" 
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {maps.map((map) => (
+            {FEATURED_LIST.map((map) => (
               <div 
                 key={map.id} 
                 onClick={() => router.push(`/maps/${map.id}`)}
                 className="min-w-[85%] md:min-w-[45%] lg:min-w-[32%] shrink-0 snap-start block group/card cursor-pointer"
               >
-                {/* CARD - THEME VÀNG KHI HOVER */}
                 <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 rounded-3xl h-full">
                   
-                  <div className={`relative aspect-[485/220] overflow-hidden ${!map.image.startsWith('/') ? `bg-gradient-to-br ${map.image}` : 'bg-muted'}`}>
-                    {map.image.startsWith('/') ? (
-                      <img 
-                        src={map.image} 
-                        alt={map.name} 
-                        draggable="false"
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/card:scale-105 pointer-events-none" 
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${map.image}`} />
-                    )}
+                  <div className="relative aspect-[485/220] overflow-hidden">
+                    <img 
+                      src={map.image} 
+                      alt={map.name} 
+                      draggable="false"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/card:scale-105 pointer-events-none" 
+                    />
 
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
                       <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300">
@@ -219,11 +185,8 @@ export function FeaturedMaps() {
                   <CardContent className="p-5">
                     <div className="flex flex-col gap-4">
                       <div>
-                        {/* TEXT TITLE - THEME VÀNG KHI HOVER */}
                         <h3 className="text-lg font-bold tracking-tight flex items-center gap-1.5 group-hover/card:text-yellow-600 transition-colors uppercase">
-                          {map.featured && (
-                            <Flame className="h-6 w-6 text-orange-500 fill-orange-500 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)] transition-all shrink-0" />
-                          )}
+                          <Flame className="h-6 w-6 text-orange-500 fill-orange-500 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)] transition-all shrink-0" />
                           {map.name}
                         </h3>
                         
@@ -241,16 +204,14 @@ export function FeaturedMaps() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                          {/* NÚT CHƠI - THEME VÀNG */}
                           <Button 
                             onClick={(e) => handlePlayNow(e, map.shortCode)}
-                            className="flex-1 h-10 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all border-none shadow-md shadow-yellow-500/20"
+                            className="flex-1 h-10 bg-yellow-500 text-black hover:bg-yellow-600 font-medium uppercase text-[11px] rounded-xl transition-all border-none shadow-md shadow-yellow-500/20"
                           >
                               <Play className="mr-2 h-3.5 w-3.5 fill-current" />
                               Chơi
                           </Button>
 
-                          {/* NÚT COPY - THEME VÀNG KHI HOVER */}
                           <Button
                             variant="outline"
                             size="icon"

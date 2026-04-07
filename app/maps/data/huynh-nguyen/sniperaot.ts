@@ -2,6 +2,8 @@ export const mapSniperAOT = {
   name: "Sniper AOT",
   creator: "Huỳnh Nguyễn", 
   mode: "Bắn tỉa",
+  difficulty: 3, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
+  featured: false, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
   
   // 🎯 GIAO DIỆN: Card hiện 6v6 nhìn rất "chiến" và đông vui
   teamType: "6v6",
@@ -25,7 +27,7 @@ export const mapSniperAOT = {
   ],
 
   // Code lấy từ link ní gửi: 6C77E92A3B10FA82DCF59265FDFF76454476
-  shortCode: "#6C77E92", 
+  shortCode: "#FREEFIRE6C77E92A3B10FA82DCF59265FDFF76454476", 
   likes: "45",
   plays: "892",
   version: "1.0",

@@ -1,7 +1,11 @@
+import { Flashlight } from "lucide-react";
+
 export const mapObbyKhongDuocNhay = {
   name: "Obby Không Được Nhảy",
   creator: "Hoài Ân", 
   mode: "Parkour",
+    difficulty: 2, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
+  featured: false, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
   
   // 🎯 QUY MÔ: Map này chơi được cả Solo lẫn nhiều người nên để Solo/Multiplayer là chuẩn
   teamType: "Solo",

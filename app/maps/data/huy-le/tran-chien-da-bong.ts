@@ -2,7 +2,9 @@ export const mapTranChienDaBong = {
   name: "Trận Chiến Đá Bóng",
   creator: "Huy Lê", 
   mode: "Đá Bóng",
-  
+  difficulty: 2, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
+  featured: true, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
+
   // 🎯 GIAO DIỆN: Hiện "5v5" nhìn cho chuyên nghiệp
   teamType: "5v5",
   

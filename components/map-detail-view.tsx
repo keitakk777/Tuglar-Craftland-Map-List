@@ -11,20 +11,30 @@ import { motion } from "framer-motion"
 export function MapDetailView({ data }: { data: any }) {
   const [copied, setCopied] = useState(false)
 
-  // 🎯 1. KHAI BÁO ẢNH DỰ PHÒNG (Placeholder)
+  // 🎯 1. XỬ LÝ ẢNH DỰ PHÒNG
   const fallbackImage = "/map-cover/Banner Chưa có.png"
   const displayBanner = data?.banner || fallbackImage
 
-  const cleanCode = data?.shortCode?.replace("#", "") || ""
+  // 🎯 2. MÁY XAY MÃ ID: Xử lý mã ngắn (#K25...) và mã dài (#FREEFIRE6C...)
+  const rawCode = data?.shortCode || ""
+  const cleanCode = rawCode
+    .replace("#", "")
+    .replace("FREEFIRE", "")
+    .trim();
+
+  // Link chơi luôn chuẩn định dạng 1E441 + ID lõi
   const playLink = `https://c.freefiremobile.com/?m=1E441${cleanCode}`
 
   const handleCopy = () => {
-    if (data?.shortCode) {
-      navigator.clipboard.writeText(data.shortCode)
+    if (rawCode) {
+      navigator.clipboard.writeText(rawCode)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000) 
     }
   }
+
+  // 🎯 3. XỬ LÝ HIỂN THỊ MÃ TRÊN NÚT (Nếu quá dài thì hiện chữ "COPY ID")
+  const displayCodeLabel = rawCode.length > 15 ? "COPY MÃ" : rawCode;
 
   const vipCreators = ["blueghast", "huỳnh", "long", "long sensei", "huy", "huy lê", "gh channel"];
   const isVerified = data?.creator && vipCreators.some((vipName: string) => data.creator.toLowerCase().includes(vipName));
@@ -51,7 +61,6 @@ export function MapDetailView({ data }: { data: any }) {
           {/* CỘT TRÁI */}
           <div className="w-full lg:w-[480px] shrink-0">
             <div className="relative aspect-[485/220] overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-yellow-500/10 bg-muted/20">
-              {/* 🎯 FIX: Sử dụng displayBanner đã được check null/empty */}
               <img 
                 src={displayBanner} 
                 className="h-full w-full object-cover" 
@@ -83,13 +92,26 @@ export function MapDetailView({ data }: { data: any }) {
                 <Button
                   variant="outline"
                   onClick={handleCopy}
-                  className="h-16 w-16 px-0 rounded-2xl border-border/50 bg-muted/30 transition-all duration-500 ease-in-out group-hover:w-40 group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5 flex items-center justify-center overflow-hidden relative active:scale-95"
+                  // 🎯 FIX: Tăng độ rộng khi hover lên một chút (w-48) để chữ "COPY MÃ" không bị khít quá
+                  className="h-16 w-16 px-0 rounded-2xl border-border/50 bg-muted/30 transition-all duration-500 ease-in-out group-hover:w-48 group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5 flex items-center justify-center overflow-hidden relative active:scale-95"
                 >
-                  <span className="absolute left-[54px] opacity-0 group-hover:opacity-100 transition-all duration-500 delay-150 text-base font-bold text-yellow-600 whitespace-nowrap tracking-wider">
-                    {data.shortCode}
-                  </span>
-                  <div className="flex items-center justify-center transition-all duration-500 ease-in-out group-hover:-translate-x-10 shrink-0">
-                    {copied ? <Check className="h-6 w-6 text-green-600 animate-in zoom-in duration-300" /> : <Copy className="h-6 w-6 text-muted-foreground group-hover:text-yellow-600" />}
+                  {/* 🎯 BOX CHỨA NỘI DUNG: Dùng flex để icon và chữ luôn đi cùng nhau và nằm giữa */}
+                  <div className="flex items-center justify-center gap-3 w-full transition-all duration-500 ease-in-out">
+                    
+                    {/* Icon: Sẽ đứng im hoặc nhích nhẹ khi group-hover */}
+                    <div className="shrink-0 transition-transform duration-500 group-hover:-translate-x-1">
+                      {copied ? (
+                        <Check className="h-6 w-6 text-green-600 animate-in zoom-in duration-300" />
+                      ) : (
+                        <Copy className="h-6 w-6 text-muted-foreground group-hover:text-yellow-600" />
+                      )}
+                    </div>
+
+                    {/* Chữ: Chỉ hiện ra khi hover và đảm bảo cân đối */}
+                    <span className="max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-500 overflow-hidden text-base font-medium text-yellow-600 whitespace-nowrap tracking-wider uppercase">
+                      {data.shortCode.length > 15 ? "COPY MÃ" : data.shortCode}
+                    </span>
+
                   </div>
                 </Button>
               </div>
@@ -156,10 +178,9 @@ export function MapDetailView({ data }: { data: any }) {
           </div>
         </div>
 
-        {/* PHẦN PATCH NOTES & ACHIEVEMENTS */}
+        {/* PATCH NOTES & ACHIEVEMENTS */}
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            {/* 🎯 FIX: Chỉ render khối Preview khi videoUrl thực sự có giá trị (không rỗng) */}
             {data.videoUrl && data.videoUrl.trim() !== "" && (
               <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm mb-8 overflow-hidden">
                 <h2 className="flex items-center gap-2 text-2xl font-bold mb-6 text-foreground uppercase tracking-tight">

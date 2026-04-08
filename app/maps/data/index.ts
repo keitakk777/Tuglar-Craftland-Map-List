@@ -10,6 +10,10 @@ import { mapLuuTruXanh } from "./long-sensei/luu-tru-xanh"
 // Gọi file của Hoài Ân
 import { map2Player2D } from "./hoai-an/2player-2d"
 import { mapObbyKhongDuocNhay } from "./hoai-an/obbykhongduocnhay"
+import { mapParkourBanana } from "./hoai-an/parkourbanana"
+import { mapParkourPanda } from "./hoai-an/parkourpanda"
+import { mapParkourDoraemon } from "./hoai-an/parkourdoraemon"
+import { mapParkourBanhSinhNhat } from "./hoai-an/parkourbanhsinhnhat"
 
 export const mapDetails = {
   "1": mapLuuTruXanh,
@@ -17,4 +21,8 @@ export const mapDetails = {
   "3": map2Player2D,       // Thêm dấu phẩy ở cuối cho chắc, sau này thêm map 4 đỡ bị lỗi
   "4": mapObbyKhongDuocNhay,
   "5": mapSniperAOT,
+  "6": mapParkourBanana,
+  "7": mapParkourPanda,
+  "8": mapParkourDoraemon,
+  "9": mapParkourBanhSinhNhat,
 }

@@ -3,16 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation" 
 import { Button } from "@/components/ui/button"
-// 🎯 Đã import thêm icon Hammer (Cái búa) cho menu Bé Tập Xây
 import { Menu, X, Sun, Moon, Search, Wrench, Hammer } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion" 
 
-// 🎯 BỔ SUNG MENU "BÉ TẬP XÂY"
+// 🎯 ĐÃ GỘP LINK VÀO ĐÂY: Sửa 1 lần dùng cho cả PC & Mobile
+const REGISTER_LINK = "https://www.facebook.com/share/p/1CHwyRwAYp/"
+
 const NAV_LINKS = [
-  { id: "all-maps", label: "Tìm map", href: "/maps" }, 
   { id: "btx", label: "Bé Tập Xây", href: "/be-tap-xay" }, 
+  { id: "all-maps", label: "Tìm map", href: "/maps" }, 
 ]
 
 export function Header() {
@@ -21,7 +22,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   
   const pathname = usePathname()
-  const [activeSection, setActiveSection] = useState("all-maps")
+  const [activeSection, setActiveSection] = useState("")
   const isClickNavigating = useRef(false)
 
   useEffect(() => {
@@ -76,13 +77,10 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [pathname]) 
 
-  /* --- LOGIC ĐỔI LOGO --- */
   let logoSrc = "/Logo Full Tuglar Craftland new dark.png"
-
   if (mounted && resolvedTheme === "dark") {
     logoSrc = "/Logo Full Tuglar Craftland new.png" 
   }
-  /* ---------------------- */
 
   const handleNavClick = (id: string, isAnchor: boolean) => {
     if (isAnchor) {
@@ -120,7 +118,6 @@ export function Header() {
         {/* CỤM BÊN PHẢI (Desktop) */}
         <div className="hidden md:flex h-full items-center gap-8">
           
-          {/* Desktop Navigation */}
           <nav className="flex h-full items-center gap-6">
             {NAV_LINKS.map((link) => {
               const isAnchor = link.href.startsWith("/#")
@@ -138,9 +135,8 @@ export function Header() {
                   `}
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    {/* 🎯 Xử lý hiện Icon tương ứng với từng Menu */}
-                    {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.id === "btx" && <Hammer className="h-4 w-4" />}
+                    {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.label}
                   </span>
                   
@@ -156,14 +152,15 @@ export function Header() {
               )
             })}
 
-            <Link href="#" className="ml-2">
+            {/* 🎯 NÚT PC: Dùng chung biến REGISTER_LINK */}
+            <Link href={REGISTER_LINK} target="_blank" className="ml-2">
               <Button className="rounded-full bg-yellow-500 text-black font-black hover:bg-yellow-600 px-6 uppercase text-[11px] tracking-widest shadow-lg shadow-yellow-500/20 active:scale-95 transition-all border border-yellow-400">
                 Tham gia KTS Tài Năng
               </Button>
             </Link>
           </nav>
 
-          {/* 🎯 Cụm Icon Công cụ (Máy tạo code + Theme) */}
+          {/* Cụm Icon Công cụ */}
           <div className="flex items-center gap-1 pl-4 border-l border-border/50 h-8">
             <Link href="/tools" title="Hệ thống hỗ trợ nhập liệu">
               <Button
@@ -172,7 +169,6 @@ export function Header() {
                 className="h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-yellow-500/10 group transition-all"
               >
                 <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground group-hover:text-yellow-500 transition-all" />
-                <span className="sr-only">Công cụ nội bộ</span>
               </Button>
             </Link>
 
@@ -185,38 +181,24 @@ export function Header() {
               >
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-yellow-500" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-blue-400" />
-                <span className="sr-only">Chuyển đổi giao diện</span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* 🎯 CỤM BÊN PHẢI (Mobile) */}
+        {/* CỤM BÊN PHẢI (Mobile) */}
         <div className="flex items-center gap-1 md:hidden">
           <Link href="/tools">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-yellow-500/10 group transition-all"
-            >
-              <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground group-hover:text-yellow-500 transition-all" />
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+              <Wrench className="h-5 w-5" />
             </Button>
           </Link>
-
           {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9 rounded-full"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="h-9 w-9 rounded-full">
               {resolvedTheme === "dark" ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-blue-400" />}
             </Button>
           )}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/30 ml-1"
-          >
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/30 ml-1">
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -244,16 +226,16 @@ export function Header() {
                     ${isActive ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : "text-muted-foreground border border-transparent hover:bg-muted/50"}
                   `}
                 >
-                  {/* 🎯 Hiện Icon tương ứng trên Mobile */}
-                  {link.id === "all-maps" && <Search className="h-4 w-4" />}
                   {link.id === "btx" && <Hammer className="h-4 w-4" />}
+                  {link.id === "all-maps" && <Search className="h-4 w-4" />}
                   {link.label}
                 </Link>
               )
             })}
             
-            <Link href="#" onClick={() => setIsMenuOpen(false)} className="mt-2">
-              <Button className="w-full h-12 rounded-xl bg-yellow-500 text-black font-black hover:bg-yellow-600 uppercase text-[11px] tracking-widest shadow-lg shadow-yellow-500/20">
+            {/* 🎯 NÚT MOBILE: Cũng dùng chung biến REGISTER_LINK */}
+            <Link href={REGISTER_LINK} target="_blank" onClick={() => setIsMenuOpen(false)} className="mt-2">
+              <Button className="w-full h-12 rounded-xl bg-yellow-500 text-black font-black uppercase tracking-widest shadow-lg shadow-yellow-500/20">
                 Tham gia KTS Tài Năng
               </Button>
             </Link>

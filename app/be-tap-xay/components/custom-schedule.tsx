@@ -4,8 +4,9 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Swords, UserCheck, Calendar } from "lucide-react"
+import { ChevronLeft, ChevronRight, UserCheck, Calendar } from "lucide-react"
 
+// 🎯 DATA: Đã lược bỏ trường icon cho gọn
 const SCHEDULE_DATA = [
   {
     id: "match-4",
@@ -51,7 +52,6 @@ export function CustomSchedule() {
 
   return (
     <div className="space-y-4">
-      {/* Header nhỏ gọn hơn */}
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-blue-500" />
@@ -59,19 +59,18 @@ export function CustomSchedule() {
         </div>
         
         <div className="flex gap-1.5">
-          <Button onClick={() => scroll("left")} variant="outline" size="icon" className="h-8 w-8 rounded-full border-muted/50 hover:bg-yellow-500 hover:text-black">
+          <Button onClick={() => scroll("left")} variant="outline" size="icon" className="h-8 w-8 rounded-full border-muted/50 hover:bg-yellow-500 hover:text-black transition-all">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button onClick={() => scroll("right")} variant="outline" size="icon" className="h-8 w-8 rounded-full border-muted/50 hover:bg-yellow-500 hover:text-black">
+          <Button onClick={() => scroll("right")} variant="outline" size="icon" className="h-8 w-8 rounded-full border-muted/50 hover:bg-yellow-500 hover:text-black transition-all">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* 🎯 TIMELINE AREA - Đã Fix Line xuyên tâm 100% */}
       <div className="relative py-4 bg-muted/5 rounded-2xl border border-border/40">
         
-        {/* Đường nối răng cưa: Đã chỉnh top-[48px] để vào đúng giữa tâm nút h-10 */}
+        {/* Đường nối xuyên tâm */}
         <div className="absolute top-[63px] left-0 right-0 h-[2px] bg-muted/30 z-0 overflow-hidden">
           <div 
             className="absolute inset-0 w-full h-full" 
@@ -84,23 +83,29 @@ export function CustomSchedule() {
         <div ref={scrollRef} className="flex gap-12 overflow-x-auto no-scrollbar px-10 relative z-10 snap-x">
           {SCHEDULE_DATA.map((match) => (
             <div key={match.id} className="flex flex-col items-center snap-center shrink-0 w-32 group">
-              {/* Ngày tháng: Cố định chiều cao để không làm lệch Line */}
               <span className={`h-5 text-[10px] font-black mb-2 flex items-end transition-colors ${selectedMatch.id === match.id ? 'text-yellow-500' : 'text-muted-foreground'}`}>
                 {match.date}
               </span>
 
-              {/* Nút tròn Node */}
+              {/* 🎯 Nút tròn Node: Dùng 1 ảnh duy nhất cho tất cả */}
               <button 
                 onClick={() => setSelectedMatch(match)}
-                className={`relative w-10 h-10 rounded-full border-4 transition-all duration-300 flex items-center justify-center z-10
+                className={`relative w-10 h-10 rounded-full border-4 transition-all duration-300 flex items-center justify-center z-10 overflow-hidden
                   ${selectedMatch.id === match.id 
                     ? 'bg-yellow-500 border-yellow-200 dark:border-yellow-900 shadow-[0_0_15px_rgba(234,179,8,0.4)] scale-110' 
                     : 'bg-background border-muted hover:border-yellow-500/50'}`}
               >
-                <Swords className={`h-4 w-4 ${selectedMatch.id === match.id ? 'text-black' : 'text-muted-foreground'}`} />
+                <img 
+                  src="/icon/icon craftland 1.png" // 🎯 Chỉ cần đổi tên file ảnh duy nhất ở đây
+                  alt="match-icon" 
+                  className={`h-5 w-5 object-contain transition-all duration-300
+                    ${selectedMatch.id === match.id 
+                      ? 'brightness-0 contrast-200 scale-110' 
+                      : 'opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0'
+                    }`}
+                />
               </button>
 
-              {/* Tên Map: Đã làm gọn để không chiếm chỗ */}
               <span className={`mt-3 text-[9px] font-black uppercase text-center transition-opacity leading-tight h-6 flex items-start ${selectedMatch.id === match.id ? 'opacity-100 text-yellow-500' : 'opacity-40 group-hover:opacity-100'}`}>
                 {match.name}
               </span>
@@ -109,7 +114,7 @@ export function CustomSchedule() {
         </div>
       </div>
 
-      {/* 🎯 KẾT QUẢ CHI TIẾT - Ép chiều cao để không phải scroll */}
+      {/* KẾT QUẢ CHI TIẾT */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedMatch.id}

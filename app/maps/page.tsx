@@ -5,13 +5,19 @@ import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Users, Star, Play, Copy, Check, Flame, Search, Filter, ChevronUp, ChevronDown, Loader2 } from "lucide-react"
+import { MapPin, Users, Star, Play, Copy, Check, Flame, Search, Filter, ChevronUp, ChevronDown, Loader2, Shield } from "lucide-react"
 import { motion, useInView } from "framer-motion"
 
 // 🎯 BƯỚC 1: IMPORT DATA TỪ KHO CHUNG
 import { mapDetails } from "./data"
 
-// 🎯 BƯỚC 2: CHUYỂN DATA & CHUẨN HÓA (Để ngoài component cho nhẹ)
+// 🎯 BƯỚC 2: TỪ ĐIỂN LOGO CÁC TEAM
+const TEAM_LOGOS: Record<string, string> = {
+  "Tuglar Craftland": "/icon/icon short tuglar dark.png", 
+  "GLX Craftland": "/glx-logo.png",
+}
+
+// 🎯 BƯỚC 3: CHUYỂN DATA & CHUẨN HÓA
 const ALL_MAPS = Object.entries(mapDetails).map(([key, data]: [string, any]) => {
   const normalizedTeamType = data.teamType === "1 người" ? "Solo" : (data.teamType || "Tự do");
   const normalizedTeamTags = (data.teamTags || []).map((t: string) => t === "1 người" ? "Solo" : t);
@@ -23,13 +29,14 @@ const ALL_MAPS = Object.entries(mapDetails).map(([key, data]: [string, any]) => 
     typeTags: Array.from(new Set([data.mode, ...(data.modeTags || [])])).filter(Boolean), 
     displayPlayers: normalizedTeamType, 
     playerTags: Array.from(new Set([normalizedTeamType, ...normalizedTeamTags])).filter(Boolean), 
+    team: data.team || "Không có", 
     favourite: data.likes || "0",
     difficulty: data.difficulty || 3, 
     shortCode: data.shortCode || "#000000",
     image: data.banner || "/map-cover/Banner Chưa có.png", 
     featured: data.featured || false
   };
-});
+}).reverse(); // 🎯 NÍ THÊM ĐÚNG CHỮ .reverse() VÀO ĐÂY NÈ!
 
 const DIFFICULTY_MAP: Record<number, string> = {
   1: "Siêu Dễ", 2: "Dễ", 3: "Trung Bình", 4: "Khó", 5: "Siêu Khó", 6: "Ác Mộng"
@@ -38,27 +45,28 @@ const DIFFICULTY_MAP: Record<number, string> = {
 export default function AllMapsPage() {
   const router = useRouter()
   
-  // --- 1. STATES (Khai báo trước) ---
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("Tất cả")
   const [filterPlayer, setFilterPlayer] = useState("Tất cả")
+  const [filterTeam, setFilterTeam] = useState("Tất cả")
+  
   const [visibleCount, setVisibleCount] = useState(8); 
   const [showScroll, setShowScroll] = useState(false);
   const [isExpandedType, setIsExpandedType] = useState(false);
   const LIMIT_TAGS = 12;
 
-  // --- 2. LOGIC LỌC (🎯 PHẢI ĐẶT Ở ĐÂY ĐỂ CÁC EFFECT BÊN DƯỚI DÙNG ĐƯỢC) ---
   const filteredMaps = ALL_MAPS.filter((map) => {
     const matchSearch = map.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchType = filterType === "Tất cả" || map.typeTags.includes(filterType)
     const matchPlayer = filterPlayer === "Tất cả" || map.playerTags.includes(filterPlayer)
-    return matchSearch && matchType && matchPlayer
+    const matchTeam = filterTeam === "Tất cả" || map.team === filterTeam 
+    
+    return matchSearch && matchType && matchPlayer && matchTeam
   })
 
   const displayMaps = filteredMaps.slice(0, visibleCount);
 
-  // --- 3. REFS & EFFECTS (Sử dụng filteredMaps đã khai báo ở trên) ---
   const loadMoreRef = useRef(null);
   const isInView = useInView(loadMoreRef, { margin: "200px" });
 
@@ -69,7 +77,7 @@ export default function AllMapsPage() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isInView, filteredMaps.length]);
+  }, [isInView, filteredMaps.length, visibleCount]); 
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,12 +88,15 @@ export default function AllMapsPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- 4. TÍNH TOÁN BỘ ĐẾM & DANH SÁCH TAG ---
   const typeCounts = ALL_MAPS.flatMap(m => m.typeTags).reduce((acc: any, t) => {
     acc[t] = (acc[t] || 0) + 1; return acc;
   }, {});
 
   const playerCounts = ALL_MAPS.flatMap(m => m.playerTags).reduce((acc: any, t) => {
+    acc[t] = (acc[t] || 0) + 1; return acc;
+  }, {});
+  
+  const teamCounts = ALL_MAPS.map(m => m.team).reduce((acc: any, t) => {
     acc[t] = (acc[t] || 0) + 1; return acc;
   }, {});
 
@@ -95,13 +106,13 @@ export default function AllMapsPage() {
   const sortedTypes = Array.from(new Set(ALL_MAPS.flatMap(m => m.typeTags)))
     .sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
 
+  const sortedTeams = Array.from(new Set(ALL_MAPS.map(m => m.team))).sort();
+
   const uniqueTypes = ["Tất cả", ...sortedTypes];
   const uniquePlayers = ["Tất cả", ...sortedPlayers];
+  const uniqueTeams = ["Tất cả", ...sortedTeams];
 
-  // --- 5. HANDLERS ---
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const handleCopy = (e: React.MouseEvent, code: string, id: string) => {
     e.stopPropagation(); navigator.clipboard.writeText(code); setCopiedId(id);
@@ -121,8 +132,8 @@ export default function AllMapsPage() {
       <div className="container mx-auto px-4 pt-24 md:pt-32">
         <div className="mb-8 flex flex-col gap-4">
           <div className="text-center md:text-left">
-            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground">Kho Bản Đồ</h1>
-            <p className="mt-2 text-muted-foreground font-medium max-w-2xl">Khám phá và trải nghiệm toàn bộ các bản đồ từ Tuglar Craftland</p>
+            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground">Kho Bản Đồ Tổng</h1>
+            <p className="mt-2 text-muted-foreground font-medium max-w-2xl">Khám phá vũ trụ map đa dạng từ Tuglar Craftland, các đối tác và cộng đồng sáng tạo</p>
           </div>
 
           <div className="flex flex-col gap-8 p-8 rounded-[2rem] border border-border/50 bg-card/30 backdrop-blur-xl shadow-2xl">
@@ -135,8 +146,9 @@ export default function AllMapsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-8 space-y-4">
+            <div className="flex flex-col gap-8">
+              
+              <div className="space-y-4">
                 <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest">
                   <Filter className="h-4 w-4" /> Chế độ chơi / Thể loại
                 </label>
@@ -165,91 +177,119 @@ export default function AllMapsPage() {
                 </div>
               </div>
 
-              <div className="lg:col-span-4 space-y-4 lg:border-l lg:border-border/30 lg:pl-10">
-                <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest">
-                  <Users className="h-4 w-4" /> Quy mô / Số người
-                </label>
-                <div className="flex flex-wrap gap-2.5">
-                  {uniquePlayers.map(player => (
-                    <Badge 
-                      key={player} onClick={() => {setFilterPlayer(player); setVisibleCount(8);}}
-                      className={`cursor-pointer px-4 py-2 text-[10px] font-bold transition-all hover:scale-105 active:scale-95 border-none ${filterPlayer === player ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'}`}
-                    >
-                      {player} {player !== "Tất cả" && <span className="ml-1 opacity-60 font-medium">({playerCounts[player] || 0})</span>}
-                    </Badge>
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/30">
+                <div className="space-y-4">
+                  <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest">
+                    <Users className="h-4 w-4" /> Quy mô / Số người
+                  </label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {uniquePlayers.map(player => (
+                      <Badge 
+                        key={player} onClick={() => {setFilterPlayer(player); setVisibleCount(8);}}
+                        className={`cursor-pointer px-4 py-2 text-[10px] font-bold transition-all hover:scale-105 active:scale-95 border-none ${filterPlayer === player ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'}`}
+                      >
+                        {player} {player !== "Tất cả" && <span className="ml-1 opacity-60 font-medium">({playerCounts[player] || 0})</span>}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4 md:border-l md:border-border/30 md:pl-8">
+                  <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest">
+                    <Shield className="h-4 w-4" /> Nhóm sáng tạo
+                  </label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {uniqueTeams.map(team => (
+                      <Badge 
+                        key={team} onClick={() => {setFilterTeam(team); setVisibleCount(8);}}
+                        className={`cursor-pointer px-4 py-2 text-[10px] font-bold transition-all hover:scale-105 active:scale-95 border-none flex items-center gap-1.5 ${filterTeam === team ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'}`}
+                      >
+                        {TEAM_LOGOS[team] && (
+                          <img 
+                            src={TEAM_LOGOS[team]} 
+                            alt={`${team} Logo`} 
+                            className={`h-3.5 w-3.5 object-contain ${filterTeam !== team && 'opacity-70 dark:opacity-80 drop-shadow-md'}`} 
+                          />
+                        )}
+                        <span>{team}</span>
+                        {team !== "Tất cả" && <span className="opacity-60 font-medium ml-0.5">({teamCounts[team] || 0})</span>}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
 
+        {/* 🎯 TÁCH GRID VÀ THÔNG BÁO TÌM KIẾM RA RIÊNG */}
         {displayMaps.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 select-none">
-              {displayMaps.map((map, index) => (
-                <motion.div
-                  key={map.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
-                  onClick={() => router.push(`/maps/${map.id}`)} 
-                  className="block group/card cursor-pointer"
-                >
-                  <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-md transition-all duration-500 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 rounded-3xl h-full flex flex-col">
-                    <div className="relative aspect-[485/220] overflow-hidden shrink-0">
-                      <img src={map.image} alt={map.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-110" />
-                      <div className="absolute left-3 top-3"><Badge className="bg-black/70 backdrop-blur-md text-white text-[9px] font-bold uppercase border-none">{map.displayType}</Badge></div>
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1.5 text-[10px] font-bold text-white border border-white/10">
-                        <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />{map.favourite}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 select-none">
+            {displayMaps.map((map, index) => (
+              <motion.div
+                key={map.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
+                onClick={() => router.push(`/maps/${map.id}`)} 
+                className="block group/card cursor-pointer"
+              >
+                <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-md transition-all duration-500 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 rounded-3xl h-full flex flex-col">
+                  <div className="relative aspect-[485/220] overflow-hidden shrink-0">
+                    <img src={map.image} alt={map.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-110" />
+                    <div className="absolute left-3 top-3"><Badge className="bg-black/70 backdrop-blur-md text-white text-[9px] font-bold uppercase border-none">{map.displayType}</Badge></div>
+                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1.5 text-[10px] font-bold text-white border border-white/10">
+                      <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />{map.favourite}
+                    </div>
+                  </div>
+
+                  <CardContent className="p-6 flex flex-col flex-1 justify-between gap-5">
+                    <div>
+                      <h3 className="text-base font-bold tracking-tight flex items-center gap-2 group-hover/card:text-yellow-500 transition-colors uppercase">
+                        {map.featured && <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />}
+                        <span className="line-clamp-1">{map.name}</span>
+                      </h3>
+                      <div className="mt-2 flex items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-yellow-500/50" />{map.displayPlayers}</span>
+                        <span className="opacity-30">|</span>
+                        <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-yellow-500/50" />{DIFFICULTY_MAP[map.difficulty as keyof typeof DIFFICULTY_MAP] || "Trung Bình"}</span>
                       </div>
                     </div>
-
-                    <CardContent className="p-6 flex flex-col flex-1 justify-between gap-5">
-                      <div>
-                        <h3 className="text-base font-bold tracking-tight flex items-center gap-2 group-hover/card:text-yellow-500 transition-colors uppercase">
-                          {map.featured && <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />}
-                          <span className="line-clamp-1">{map.name}</span>
-                        </h3>
-                        <div className="mt-2 flex items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                          <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-yellow-500/50" />{map.displayPlayers}</span>
-                          <span className="opacity-30">|</span>
-                          <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-yellow-500/50" />{DIFFICULTY_MAP[map.difficulty as keyof typeof DIFFICULTY_MAP] || "Trung Bình"}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                          <Button onClick={(e) => handlePlayNow(e, map.shortCode)} className="flex-1 h-11 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all shadow-md shadow-yellow-500/20 active:scale-95">
-                              <Play className="mr-2 h-4 w-4 fill-current" /> CHƠI
-                          </Button>
-                          <Button variant="outline" size="icon" onClick={(e) => handleCopy(e, map.shortCode, map.id)} className="h-11 w-11 shrink-0 rounded-xl border-border/50 hover:border-yellow-500/50 hover:bg-yellow-500/10 active:scale-95">
-                            {copiedId === map.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
-                          </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            <div ref={loadMoreRef} className="h-40 flex items-center justify-center">
-               {visibleCount < filteredMaps.length && (
-                  <div className="flex flex-col items-center gap-4 text-muted-foreground animate-pulse">
-                     <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.4em]">Đang tải thêm bản đồ...</span>
-                  </div>
-               )}
-            </div>
-          </>
+                    <div className="flex items-center gap-2.5">
+                        <Button onClick={(e) => handlePlayNow(e, map.shortCode)} className="flex-1 h-11 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all shadow-md shadow-yellow-500/20 active:scale-95">
+                            <Play className="mr-2 h-4 w-4 fill-current" /> CHƠI
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={(e) => handleCopy(e, map.shortCode, map.id)} className="h-11 w-11 shrink-0 rounded-xl border-border/50 hover:border-yellow-500/50 hover:bg-yellow-500/10 active:scale-95">
+                          {copiedId === map.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-40 border-2 border-dashed border-border/20 rounded-[3rem] bg-card/10 backdrop-blur-sm">
             <div className="bg-muted/20 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
                <Search className="h-10 w-10 text-muted-foreground/50" />
             </div>
             <h2 className="text-2xl font-bold text-muted-foreground/80 uppercase tracking-tight">Không tìm thấy map nào ní ơi 🥲</h2>
-            <Button onClick={() => { setSearchQuery(""); setFilterType("Tất cả"); setFilterPlayer("Tất cả"); setVisibleCount(8); }} className="bg-yellow-500 text-black font-black uppercase rounded-2xl px-10 h-12 hover:bg-yellow-600 shadow-xl shadow-yellow-500/20">Xóa bộ lọc</Button>
+            <Button onClick={() => { setSearchQuery(""); setFilterType("Tất cả"); setFilterPlayer("Tất cả"); setFilterTeam("Tất cả"); setVisibleCount(8); }} className="mt-4 bg-yellow-500 text-black font-black uppercase rounded-2xl px-10 h-12 hover:bg-yellow-600 shadow-xl shadow-yellow-500/20">Xóa bộ lọc</Button>
           </div>
         )}
+
+        {/* 🎯 ĐƯA KHỐI LOADING NÀY RA KHỎI ĐIỀU KIỆN TRÊN ĐỂ FIX LỖI UNMOUNT */}
+        <div ref={loadMoreRef} className="h-40 flex items-center justify-center mt-4">
+           {displayMaps.length > 0 && visibleCount < filteredMaps.length && (
+              <div className="flex flex-col items-center gap-4 text-muted-foreground animate-pulse">
+                 <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em]">Đang tải thêm bản đồ...</span>
+              </div>
+           )}
+        </div>
+
       </div>
 
       {showScroll && (

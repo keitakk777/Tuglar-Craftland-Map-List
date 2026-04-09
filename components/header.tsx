@@ -3,15 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation" 
 import { Button } from "@/components/ui/button"
-import { Menu, X, Sun, Moon } from "lucide-react"
+// 🎯 Đã import thêm icon Hammer (Cái búa) cho menu Bé Tập Xây
+import { Menu, X, Sun, Moon, Search, Wrench, Hammer } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion" 
 
+// 🎯 BỔ SUNG MENU "BÉ TẬP XÂY"
 const NAV_LINKS = [
-  { id: "events", label: "Thông báo", href: "/#events" },
-  { id: "popular-maps", label: "Map nổi bật", href: "/#popular-maps" }, 
-  { id: "all-maps", label: "Kho map", href: "/maps" }, 
+  { id: "all-maps", label: "Tìm map", href: "/maps" }, 
+  { id: "btx", label: "Bé Tập Xây", href: "/be-tap-xay" }, 
 ]
 
 export function Header() {
@@ -20,7 +21,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   
   const pathname = usePathname()
-  const [activeSection, setActiveSection] = useState("events")
+  const [activeSection, setActiveSection] = useState("all-maps")
   const isClickNavigating = useRef(false)
 
   useEffect(() => {
@@ -48,19 +49,17 @@ export function Header() {
       }
       
       if (window.scrollY < 100) {
-        setActiveSection("events")
+        setActiveSection("")
       } else if (!found) {
         setActiveSection("")
       }
     }
 
-    // 🎯 FIX LỖI CHUYỂN TRANG KHÔNG CUỘN: 
     if (window.location.hash) {
       const hashId = window.location.hash.replace("#", "")
       if (NAV_LINKS.some(l => l.id === hashId)) {
         setActiveSection(hashId)
         
-        // Đợi 500ms cho trang render xong dàn giao diện rồi mới ra lệnh cuộn
         setTimeout(() => {
           const section = document.getElementById(hashId)
           if (section) {
@@ -85,13 +84,11 @@ export function Header() {
   }
   /* ---------------------- */
 
-  // 🎯 NÂNG CẤP HÀM CLICK ĐỂ CHỦ ĐỘNG CUỘN TRANG
   const handleNavClick = (id: string, isAnchor: boolean) => {
     if (isAnchor) {
       isClickNavigating.current = true 
       setActiveSection(id)
       
-      // Nếu đang ở ngay trang chủ thì tự bắt tọa độ rồi cuộn mượt luôn
       if (pathname === "/") {
         const section = document.getElementById(id)
         if (section) {
@@ -120,11 +117,11 @@ export function Header() {
           />
         </Link>
 
-        {/* CỤM BÊN PHẢI */}
-        <div className="hidden md:flex h-full items-center gap-12">
+        {/* CỤM BÊN PHẢI (Desktop) */}
+        <div className="hidden md:flex h-full items-center gap-8">
           
           {/* Desktop Navigation */}
-          <nav className="flex h-full items-center gap-8">
+          <nav className="flex h-full items-center gap-6">
             {NAV_LINKS.map((link) => {
               const isAnchor = link.href.startsWith("/#")
               const isActive = isAnchor 
@@ -135,12 +132,17 @@ export function Header() {
                 <Link 
                   key={link.id}
                   href={link.href} 
-                  onClick={() => handleNavClick(link.id, isAnchor)} // 🎯 Đã gắn hàm click mới
+                  onClick={() => handleNavClick(link.id, isAnchor)}
                   className={`relative flex h-full items-center px-1 text-sm font-bold transition-colors hover:text-yellow-500
                     ${isActive ? "text-yellow-500" : "text-muted-foreground"}
                   `}
                 >
-                  <span className="relative z-10">{link.label}</span>
+                  <span className="relative z-10 flex items-center gap-2">
+                    {/* 🎯 Xử lý hiện Icon tương ứng với từng Menu */}
+                    {link.id === "all-maps" && <Search className="h-4 w-4" />}
+                    {link.id === "btx" && <Hammer className="h-4 w-4" />}
+                    {link.label}
+                  </span>
                   
                   {isActive && (
                     <motion.div 
@@ -153,16 +155,33 @@ export function Header() {
                 </Link>
               )
             })}
+
+            <Link href="#" className="ml-2">
+              <Button className="rounded-full bg-yellow-500 text-black font-black hover:bg-yellow-600 px-6 uppercase text-[11px] tracking-widest shadow-lg shadow-yellow-500/20 active:scale-95 transition-all border border-yellow-400">
+                Tham gia KTS Tài Năng
+              </Button>
+            </Link>
           </nav>
 
-          {/* Theme Toggle Button */}
-          <div className="flex items-center">
+          {/* 🎯 Cụm Icon Công cụ (Máy tạo code + Theme) */}
+          <div className="flex items-center gap-1 pl-4 border-l border-border/50 h-8">
+            <Link href="/tools" title="Hệ thống hỗ trợ nhập liệu">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-yellow-500/10 group transition-all"
+              >
+                <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground group-hover:text-yellow-500 transition-all" />
+                <span className="sr-only">Công cụ nội bộ</span>
+              </Button>
+            </Link>
+
             {mounted && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="relative h-9 w-9 rounded-lg border border-border/50 bg-secondary/50 hover:bg-secondary transition-all"
+                className="relative h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-secondary transition-all ml-1"
               >
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-yellow-500" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-blue-400" />
@@ -172,21 +191,31 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu Toggle & Theme Toggle */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* 🎯 CỤM BÊN PHẢI (Mobile) */}
+        <div className="flex items-center gap-1 md:hidden">
+          <Link href="/tools">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full border border-border/50 bg-secondary/50 hover:bg-yellow-500/10 group transition-all"
+            >
+              <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground group-hover:text-yellow-500 transition-all" />
+            </Button>
+          </Link>
+
           {mounted && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-9 w-9"
+              className="h-9 w-9 rounded-full"
             >
               {resolvedTheme === "dark" ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-blue-400" />}
             </Button>
           )}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary/30 ml-1"
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -195,8 +224,8 @@ export function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="border-t border-border bg-background md:hidden shadow-lg">
-          <nav className="flex flex-col gap-2 p-4">
+        <div className="border-t border-border bg-background/95 backdrop-blur-xl md:hidden shadow-2xl">
+          <nav className="flex flex-col gap-3 p-6">
             {NAV_LINKS.map((link) => {
               const isAnchor = link.href.startsWith("/#")
               const isActive = isAnchor 
@@ -209,16 +238,25 @@ export function Header() {
                   href={link.href} 
                   onClick={() => {
                     setIsMenuOpen(false)
-                    handleNavClick(link.id, isAnchor) // 🎯 Gắn hàm click mới cho mobile
+                    handleNavClick(link.id, isAnchor)
                   }} 
-                  className={`rounded-lg px-4 py-3 text-sm font-bold transition-all hover:bg-yellow-500/10 hover:text-yellow-600
-                    ${isActive ? "bg-yellow-500/10 text-yellow-500 border-l-4 border-yellow-500" : "text-muted-foreground border-l-4 border-transparent"}
+                  className={`flex items-center gap-3 rounded-xl px-5 py-4 text-sm font-bold transition-all
+                    ${isActive ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : "text-muted-foreground border border-transparent hover:bg-muted/50"}
                   `}
                 >
+                  {/* 🎯 Hiện Icon tương ứng trên Mobile */}
+                  {link.id === "all-maps" && <Search className="h-4 w-4" />}
+                  {link.id === "btx" && <Hammer className="h-4 w-4" />}
                   {link.label}
                 </Link>
               )
             })}
+            
+            <Link href="#" onClick={() => setIsMenuOpen(false)} className="mt-2">
+              <Button className="w-full h-12 rounded-xl bg-yellow-500 text-black font-black hover:bg-yellow-600 uppercase text-[11px] tracking-widest shadow-lg shadow-yellow-500/20">
+                Tham gia KTS Tài Năng
+              </Button>
+            </Link>
           </nav>
         </div>
       )}

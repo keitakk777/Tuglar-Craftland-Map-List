@@ -206,7 +206,7 @@ export function FeaturedMaps() {
                       <div className="flex items-center gap-2">
                           <Button 
                             onClick={(e) => handlePlayNow(e, map.shortCode)}
-                            className="flex-1 h-10 bg-yellow-500 text-black hover:bg-yellow-600 font-medium uppercase text-[11px] rounded-xl transition-all border-none shadow-md shadow-yellow-500/20"
+                            className="flex-1 h-10 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all border-none shadow-md shadow-yellow-500/20"
                           >
                               <Play className="mr-2 h-3.5 w-3.5 fill-current" />
                               Chơi

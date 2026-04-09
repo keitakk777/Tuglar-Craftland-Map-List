@@ -1,14 +1,23 @@
 export const mapTranChienDaBong = {
+  // 🎯 1. THÔNG TIN CƠ BẢN
   name: "Trận Chiến Đá Bóng",
   creator: "Huy Lê", 
-  mode: "Đá Bóng",
-  difficulty: 2, // 🎯 Thêm dòng này để nó hiện là "Dễ" ở khắp mọi nơi
-  featured: true, // 🎯 THÊM DÒNG NÀY VÀO NÈ NÍ!
+  team: "Tuglar Craftland", // 🎯 Gắn thẻ đội nhóm
+  shortCode: "#1A00E4", 
+  version: "1.3.2",
+  updateDate: "04/2026",
+  description: "Trận cầu đỉnh cao với hệ thống vật phẩm và kỹ năng độc lạ.",
 
-  // 🎯 GIAO DIỆN: Hiện "5v5" nhìn cho chuyên nghiệp
-  teamType: "5v5",
-  
-  // 🎯 PHÂN LOẠI THỂ LOẠI: Thêm tag thể thao và các yếu tố gameplay nổi bật
+  // 🎯 2. ĐIỀU HƯỚNG HIỂN THỊ TRANG CHỦ (TỰ ĐỘNG BỐC MAP)
+  isTrending: true,    // Siêu phẩm eSports, có cả video thì phải lên Trending!
+  isTuglar: true,      // Lên dòng Tuglar Originals
+  isCommunity: false,
+  featured: true,      // 🎯 Giữ đúng cờ nổi bật Leader yêu cầu
+
+  // 🎯 3. THỂ LOẠI & QUY MÔ
+  mode: "Đá Bóng",
+  difficulty: 2,       // Dễ
+  teamType: "5v5",     // Hiện "5v5" nhìn cực kỳ chuyên nghiệp
   modeTags: [
     "Thể thao", 
     "Cạnh tranh", 
@@ -16,22 +25,19 @@ export const mapTranChienDaBong = {
     "Hành động",
     "Esports"
   ],
-
-  // 🎯 PHÂN LOẠI QUY MÔ: Bao quát hết các kiểu tìm kiếm về số lượng
   teamTags: [
     "5v5", 
     "10 người chơi", 
     "Multiplayer"
   ],
 
-  shortCode: "#1A00E4", 
+  // 🎯 4. CHỈ SỐ & MEDIA
   likes: "30",
   plays: "953",
-  version: "1.3.2",
-  updateDate: "04/2026",
-  videoUrl: "https://www.youtube.com/embed/3FA1ReD2upU", 
-  description: "Trận cầu đỉnh cao với hệ thống vật phẩm và kỹ năng độc lạ.",
   banner: "/map-cover/huy-le/Banner Soccer.jpg",
+  videoUrl: "https://www.youtube.com/embed/3FA1ReD2upU", 
+  
+  // 🎯 5. THÀNH TỰU & BẢN CẬP NHẬT
   achievements: [
     { rank: "#1", title: "Map bóng đá có hệ thống kỹ năng đa dạng nhất", type: "gold" }
   ],

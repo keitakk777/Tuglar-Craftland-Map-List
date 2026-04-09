@@ -4,15 +4,16 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, UserCheck, Calendar } from "lucide-react"
+import { ChevronLeft, ChevronRight, UserCheck, Calendar, Play } from "lucide-react" // 🎯 Thêm icon Play
 
-// 🎯 DATA: Đã lược bỏ trường icon cho gọn
+// 🎯 DATA: Thêm trường videoUrl vào mỗi trận
 const SCHEDULE_DATA = [
   {
     id: "match-4",
     date: "04/04",
     name: "TsunamiRush",
     reward: 250,
+    videoUrl: "", // Link video thực tế
     winners: ["Lê Gia Nghĩa", "Trần Việt Thắng", "Nguyễn Hữu Thuận", "Đinh Đức Hải", "Lý Quốc Bảo", "Lương Cao Thái"]
   },
   {
@@ -20,6 +21,7 @@ const SCHEDULE_DATA = [
     date: "28/03",
     name: "Tập Luyện",
     reward: 250,
+    videoUrl: "", // Không có video -> Nút sẽ màu xám
     winners: ["Lý Quốc Bảo", "Lương Cao Thái", "Trần Đăng Minh", "Hoài Ân", "Lê Nguyễn Bảo My", "Tống Văn Nam"]
   },
   {
@@ -27,6 +29,7 @@ const SCHEDULE_DATA = [
     date: "21/03",
     name: "Headshot-Arena",
     reward: 250,
+    videoUrl: "https://youtu.be/e2EKKcDnDDk",
     winners: ["Nguyễn Hữu Thuận", "Huỳnh Nguyễn", "Phạm Văn Chuyên", "Phạm Hoàng Hiệp", "Nguyễn Quang Ninh"]
   },
   {
@@ -34,6 +37,7 @@ const SCHEDULE_DATA = [
     date: "14/03",
     name: "Tử Chiến Random",
     reward: 250,
+    videoUrl: "https://youtu.be/z9JF9DWSfX0?si=S3NufEk_gAyGblLZ",
     winners: ["Trần Đăng Minh", "Nguyễn Quang Ninh", "Tống Văn Nam", "Đinh Đức Hải", "Lò Văn Đạt"]
   }
 ]
@@ -69,8 +73,6 @@ export function CustomSchedule() {
       </div>
 
       <div className="relative py-4 bg-muted/5 rounded-2xl border border-border/40">
-        
-        {/* Đường nối xuyên tâm */}
         <div className="absolute top-[63px] left-0 right-0 h-[2px] bg-muted/30 z-0 overflow-hidden">
           <div 
             className="absolute inset-0 w-full h-full" 
@@ -87,7 +89,6 @@ export function CustomSchedule() {
                 {match.date}
               </span>
 
-              {/* 🎯 Nút tròn Node: Dùng 1 ảnh duy nhất cho tất cả */}
               <button 
                 onClick={() => setSelectedMatch(match)}
                 className={`relative w-10 h-10 rounded-full border-4 transition-all duration-300 flex items-center justify-center z-10 overflow-hidden
@@ -96,7 +97,7 @@ export function CustomSchedule() {
                     : 'bg-background border-muted hover:border-yellow-500/50'}`}
               >
                 <img 
-                  src="/icon/icon craftland 1.png" // 🎯 Chỉ cần đổi tên file ảnh duy nhất ở đây
+                  src="/icon/icon craftland 1.png" 
                   alt="match-icon" 
                   className={`h-5 w-5 object-contain transition-all duration-300
                     ${selectedMatch.id === match.id 
@@ -125,10 +126,36 @@ export function CustomSchedule() {
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-4">
             <h3 className="text-xl font-black uppercase text-yellow-500">{selectedMatch.name}</h3>
-            <Badge className="w-fit bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 py-1 px-3 rounded-lg font-black uppercase text-xs flex items-center gap-2">
-              Thưởng: {selectedMatch.reward} 
-              <img src="/icon/kc.png" className="w-4 h-4 object-contain" alt="kc" />
-            </Badge>
+            
+            <div className="flex items-center gap-2"> {/* Bọc cụm nút bên phải */}
+              {/* 🎯 NÚT XEM VIDEO CUSTOM */}
+              <Button
+                asChild={!!selectedMatch.videoUrl}
+                disabled={!selectedMatch.videoUrl}
+                variant="outline"
+                size="sm"
+                className={`h-7 px-3 text-[10px] font-black uppercase transition-all gap-1.5 rounded-lg border-none
+                  ${selectedMatch.videoUrl 
+                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-500/20 active:scale-95' 
+                    : 'bg-muted text-muted-foreground/50 cursor-not-allowed opacity-70'
+                  }`}
+              >
+                {selectedMatch.videoUrl ? (
+                  <a href={selectedMatch.videoUrl} target="_blank" rel="noopener noreferrer">
+                    <Play className="h-3 w-3 fill-current" /> Xem Video
+                  </a>
+                ) : (
+                  <>
+                    <Play className="h-3 w-3" /> Không có video
+                  </>
+                )}
+              </Button>
+
+              <Badge className="w-fit bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 py-1 px-3 rounded-lg font-black uppercase text-xs flex items-center gap-2">
+                Thưởng: {selectedMatch.reward} 
+                <img src="/icon/kc.png" className="w-4 h-4 object-contain" alt="kc" />
+              </Badge>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">

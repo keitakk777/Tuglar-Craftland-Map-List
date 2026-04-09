@@ -4,16 +4,16 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, UserCheck, Calendar, Play } from "lucide-react" // 🎯 Thêm icon Play
+import { ChevronLeft, ChevronRight, UserCheck, Calendar, Play } from "lucide-react"
 
-// 🎯 DATA: Thêm trường videoUrl vào mỗi trận
+// 🎯 DATA: Đã cập nhật thêm 6 trận cũ từ Sheet
 const SCHEDULE_DATA = [
   {
     id: "match-4",
     date: "04/04",
     name: "TsunamiRush",
     reward: 250,
-    videoUrl: "", // Link video thực tế
+    videoUrl: "",
     winners: ["Lê Gia Nghĩa", "Trần Việt Thắng", "Nguyễn Hữu Thuận", "Đinh Đức Hải", "Lý Quốc Bảo", "Lương Cao Thái"]
   },
   {
@@ -21,7 +21,7 @@ const SCHEDULE_DATA = [
     date: "28/03",
     name: "Tập Luyện",
     reward: 250,
-    videoUrl: "", // Không có video -> Nút sẽ màu xám
+    videoUrl: "",
     winners: ["Lý Quốc Bảo", "Lương Cao Thái", "Trần Đăng Minh", "Hoài Ân", "Lê Nguyễn Bảo My", "Tống Văn Nam"]
   },
   {
@@ -39,6 +39,55 @@ const SCHEDULE_DATA = [
     reward: 250,
     videoUrl: "https://youtu.be/z9JF9DWSfX0?si=S3NufEk_gAyGblLZ",
     winners: ["Trần Đăng Minh", "Nguyễn Quang Ninh", "Tống Văn Nam", "Đinh Đức Hải", "Lò Văn Đạt"]
+  },
+  // 🕒 DỮ LIỆU CŨ (Trước 14/3)
+  {
+    id: "match-old-6",
+    date: "07/03",
+    name: "*Parkour Đảo Bay",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Lê Gia Nghĩa", "Phạm Văn Chuyên", "Trần Đăng Minh", "Lý Quốc Bảo", "Đỗ Lê Duy"]
+  },
+  {
+    id: "match-old-5",
+    date: "28/02",
+    name: "*Hỗn Chiến Mùa Đông",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Nguyễn Hữu Thuận", "Đinh Đức Hải", "Nguyễn Quang Ninh", "Trần Đăng Minh", "Lý Quốc Bảo"]
+  },
+  {
+    id: "match-old-4",
+    date: "15/02",
+    name: "*Random Shotgun",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Gia Nghĩa", "Đinh Đức Hải", "Bùi Doãn Việt Hùng", "Trần Việt Thắng"]
+  },
+  {
+    id: "match-old-3",
+    date: "17/01",
+    name: "*Prison Run (Sacso)",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Tống Văn Nam", "Nguyễn Quang Ninh", "Phạm Hoàng Hiệp", "Phạm Văn Chuyên", "Trần Việt Thắng"]
+  },
+  {
+    id: "match-old-2",
+    date: "10/01",
+    name: "*Voxel Canvas Run",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Đỗ Lê Duy", "Đinh Đức Hải", "Tống Văn Nam", "Phạm Hoàng Hiệp", "Phạm Văn Chuyên"]
+  },
+  {
+    id: "match-old-1",
+    date: "04/01",
+    name: "*Trận Chiến Đá Bóng",
+    reward: 250,
+    videoUrl: "",
+    winners: ["Trần Đăng Minh", "Đinh Đức Hải", "Trần Việt Thắng", "Lý Quốc Bảo", "Tống Văn Nam"]
   }
 ]
 
@@ -115,7 +164,6 @@ export function CustomSchedule() {
         </div>
       </div>
 
-      {/* KẾT QUẢ CHI TIẾT */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedMatch.id}
@@ -127,8 +175,7 @@ export function CustomSchedule() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-4">
             <h3 className="text-xl font-black uppercase text-yellow-500">{selectedMatch.name}</h3>
             
-            <div className="flex items-center gap-2"> {/* Bọc cụm nút bên phải */}
-              {/* 🎯 NÚT XEM VIDEO CUSTOM */}
+            <div className="flex items-center gap-2">
               <Button
                 asChild={!!selectedMatch.videoUrl}
                 disabled={!selectedMatch.videoUrl}

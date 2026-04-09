@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Copy, Check, Wand2, Lock } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Loader2, Copy, Check, Wand2, Lock, ArrowLeft } from "lucide-react" // 🎯 Thêm ArrowLeft
+import Link from "next/link" // 🎯 Thêm Link để quay về trang chủ
 
 // 🔑 MẬT KHẨU BÍ MẬT CỦA TEAM NÍ ĐẶT Ở ĐÂY NÈ
 const SECRET_PASSWORD = "007"
@@ -34,7 +35,7 @@ export default function ToolGeneratorPage() {
     e.preventDefault()
     if (passwordInput === SECRET_PASSWORD) {
       setIsAuthenticated(true)
-      sessionStorage.setItem("tuglar_tools_auth", "true") // Lưu phiên đăng nhập
+      sessionStorage.setItem("tuglar_tools_auth", "true") 
     } else {
       alert("Sai mật khẩu rồi ní ơi! Khai mau có phải gián điệp không? 🕵️‍♂️")
       setPasswordInput("")
@@ -105,13 +106,21 @@ export const map${mapData.name.replace(/[^a-zA-Z0-9]/g, '') || "NewMap"} = {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  // 🔒 NẾU CHƯA NHẬP ĐÚNG PASS -> HIỂN THỊ MÀN HÌNH KHÓA
+  // 🔒 MÀN HÌNH KHÓA (Giao diện khi chưa Login)
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background pt-32 pb-10 px-4 flex items-center justify-center">
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-500/10 via-[#0a0f1a] to-[#020617] -z-10" />
-        <Card className="max-w-md w-full bg-card/40 backdrop-blur-xl border-border/50 shadow-2xl">
-          <CardHeader className="text-center pb-4">
+        <Card className="max-w-md w-full bg-card/40 backdrop-blur-xl border-border/50 shadow-2xl relative overflow-hidden">
+          
+          {/* 🎯 NÚT QUAY LẠI CHO MOBILE (Góc trên trái) */}
+          <Link href="/" className="absolute top-4 left-4 z-10">
+            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-yellow-500/10 text-muted-foreground hover:text-yellow-500 transition-all">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+
+          <CardHeader className="text-center pb-4 pt-10">
             <div className="mx-auto bg-yellow-500/20 p-4 rounded-full w-fit mb-4 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
               <Lock className="h-8 w-8 text-yellow-500" />
             </div>
@@ -127,9 +136,13 @@ export const map${mapData.name.replace(/[^a-zA-Z0-9]/g, '') || "NewMap"} = {
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="bg-background/50 border border-border/50 rounded-xl px-4 py-4 outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all font-bold text-center tracking-widest"
               />
-              <Button type="submit" className="bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase h-12 rounded-xl transition-all active:scale-95">
+              <Button type="submit" className="bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase h-12 rounded-xl transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
                 Mở Khóa
               </Button>
+              {/* Nút thoát phụ dưới cùng */}
+              <Link href="/" className="text-[10px] text-center font-bold text-muted-foreground/50 hover:text-yellow-500 uppercase tracking-tighter transition-colors">
+                Quay về trang chủ
+              </Link>
             </form>
           </CardContent>
         </Card>
@@ -137,14 +150,23 @@ export const map${mapData.name.replace(/[^a-zA-Z0-9]/g, '') || "NewMap"} = {
     )
   }
 
-  // 🔓 NẾU PASS ĐÚNG -> HIỂN THỊ GIAO DIỆN CHẾ TẠO CODE
+  // 🔓 GIAO DIỆN CHẾ TẠO CODE (Khi đã Login)
   return (
     <div className="min-h-screen bg-background pt-24 pb-10 px-4">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-500/5 via-[#0a0f1a] to-[#020617] -z-10" />
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-black uppercase text-yellow-500">Hệ thống hỗ trợ nhập liệu</h1>
-            <Button variant="outline" onClick={() => {sessionStorage.removeItem("tuglar_tools_auth"); setIsAuthenticated(false)}} className="text-xs font-bold rounded-xl h-8 px-3">
+        
+        {/* HEADER TOOL: Thêm nút Quay lại nhanh */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Link href="/">
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 border border-border/50 bg-background/50 hover:text-yellow-500 transition-all">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-2xl sm:text-3xl font-black uppercase text-yellow-500 tracking-tighter">Hệ thống nhập liệu</h1>
+            </div>
+            <Button variant="outline" onClick={() => {sessionStorage.removeItem("tuglar_tools_auth"); setIsAuthenticated(false)}} className="text-[10px] uppercase tracking-widest font-black rounded-xl h-9 px-4 border-red-500/20 text-red-500 hover:bg-red-500/10">
               Đăng xuất
             </Button>
         </div>
@@ -152,31 +174,31 @@ export const map${mapData.name.replace(/[^a-zA-Z0-9]/g, '') || "NewMap"} = {
         <div className="grid md:grid-cols-2 gap-6">
           {/* CỘT TRÁI: NHẬP LIỆU */}
           <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-xl">
-            <CardHeader><CardTitle>1. Dán Link Garena vào đây</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">1. Dán Link Garena</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <input 
                   type="text" placeholder="https://c.freefiremobile.com/..." 
                   value={url} onChange={(e) => setUrl(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-xl px-3 outline-none"
+                  className="flex-1 bg-background border border-border/50 rounded-xl px-4 outline-none focus:border-blue-500/50 transition-all"
                 />
-                <Button onClick={handleFetch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold">
-                  {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Wand2 className="h-4 w-4 mr-2" />} Cào Data
+                <Button onClick={handleFetch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold h-11">
+                  {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Wand2 className="h-4 w-4 mr-2" />} Cào
                 </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/30">
-                <div><label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">Người tạo (Creator)</label>
-                  <input type="text" value={mapData.creator} onChange={e => setMapData({...mapData, creator: e.target.value})} className="w-full bg-background border rounded-lg px-3 py-2 font-semibold" />
+                <div><label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">Người tạo</label>
+                  <input type="text" value={mapData.creator} onChange={e => setMapData({...mapData, creator: e.target.value})} className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 font-bold text-sm" />
                 </div>
                 <div><label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">Team</label>
-                  <input type="text" value={mapData.team} onChange={e => setMapData({...mapData, team: e.target.value})} className="w-full bg-background border rounded-lg px-3 py-2 font-semibold" />
+                  <input type="text" value={mapData.team} onChange={e => setMapData({...mapData, team: e.target.value})} className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 font-bold text-sm" />
                 </div>
                 <div><label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">Likes (Chữ K)</label>
-                  <input type="text" value={mapData.likes} onChange={e => setMapData({...mapData, likes: e.target.value})} className="w-full bg-background border rounded-lg px-3 py-2 placeholder:text-muted-foreground/30 font-semibold" placeholder="VD: 15.1K" />
+                  <input type="text" value={mapData.likes} onChange={e => setMapData({...mapData, likes: e.target.value})} className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 font-bold text-sm" placeholder="VD: 15.1K" />
                 </div>
                 <div><label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">Plays (Chữ K)</label>
-                  <input type="text" value={mapData.plays} onChange={e => setMapData({...mapData, plays: e.target.value})} className="w-full bg-background border rounded-lg px-3 py-2 placeholder:text-muted-foreground/30 font-semibold" placeholder="VD: 100K" />
+                  <input type="text" value={mapData.plays} onChange={e => setMapData({...mapData, plays: e.target.value})} className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 font-bold text-sm" placeholder="VD: 100K" />
                 </div>
               </div>
             </CardContent>
@@ -185,13 +207,13 @@ export const map${mapData.name.replace(/[^a-zA-Z0-9]/g, '') || "NewMap"} = {
           {/* CỘT PHẢI: XUẤT CODE */}
           <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-xl relative overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50 bg-muted/20">
-              <CardTitle>2. Code Tạo Sẵn</CardTitle>
-              <Button onClick={copyToClipboard} size="sm" className={`${copied ? 'bg-green-500 text-white' : 'bg-yellow-500 text-black'} hover:opacity-80 font-bold rounded-lg`}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 mr-2" />} {copied ? "Đã Copy" : "Copy Code"}
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">2. Code Export</CardTitle>
+              <Button onClick={copyToClipboard} size="sm" className={`${copied ? 'bg-green-500 text-white' : 'bg-yellow-500 text-black'} hover:opacity-80 font-black rounded-lg transition-all`}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 mr-2" />} {copied ? "Xong!" : "Copy"}
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <pre className="text-[11px] sm:text-xs text-green-400 bg-slate-950 p-6 overflow-x-auto max-h-[420px] custom-scrollbar rounded-b-xl">
+              <pre className="text-[10px] sm:text-[11px] text-green-400 bg-slate-950 p-6 overflow-x-auto max-h-[420px] custom-scrollbar rounded-b-xl leading-relaxed">
                 {generatedCode}
               </pre>
             </CardContent>

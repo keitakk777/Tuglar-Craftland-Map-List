@@ -1,15 +1,16 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { MapCarousel } from "@/components/map-carousel"
-import { TeamCarousel } from "@/components/team-carousel" // 🎯 IMPORT COMPONENT TEAM MỚI
+import { TeamCarousel } from "@/components/team-carousel" 
 import { Flame, Shield } from "lucide-react"
 
-import { mapDetails } from "./maps/data" 
+import { mapDetails } from "./maps/data/index"
 
-// 🎯 TỪ ĐIỂN LOGO CÁC TEAM (Trong file app/page.tsx)
+// 🎯 TỪ ĐIỂN LOGO CÁC TEAM
+// ⚠️ QUAN TRỌNG: Nhớ lưu file logo của glx vào thư mục public/team-avatar/ với tên glx.png
 const TEAM_LOGOS: Record<string, string> = {
-  "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", // 🎯 Đổi ở đây nè!
-  "GLX Craftland": "/glx-logo.png",
+  "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", 
+  "GLX Craftland": "/team-avatar/GLX Craftland AVT.jpg", // 🎯 Đã cập nhật đúng tên team và đường dẫn ảnh
 }
 
 // 🎯 CHUẨN HÓA DATA VÀ LẬT NGƯỢC
@@ -58,7 +59,6 @@ export default function Home() {
       <Header />
       
       <main className="pt-24 pb-10">
-        {/* Thêm flex flex-col gap-4 để tạo khoảng cách giữa các dòng */}
         <div className="container mx-auto flex flex-col gap-4">
           
           {/* SECTION 1: MAP CAROUSEL (Thẻ chữ nhật) */}
@@ -79,8 +79,6 @@ export default function Home() {
                   <img 
                     src="/icon/icon short tuglar dark.png" 
                     alt="Tuglar Logo" 
-                    // 🎯 FIX Ở ĐÂY: dark:invert sẽ biến màu đen thành màu trắng khi bật Dark Mode
-                    // dark:brightness-200 giúp logo sáng rõ hơn trên nền tối
                     className="h-6 w-6 object-contain drop-shadow-[0_0_10px_rgba(234,179,8,0.5)] dark:invert dark:brightness-200 transition-all" 
                   />
                 </div>

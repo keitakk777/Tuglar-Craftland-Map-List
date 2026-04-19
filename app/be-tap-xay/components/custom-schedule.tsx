@@ -4,10 +4,26 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, UserCheck, Calendar, Play } from "lucide-react"
+import { ChevronLeft, ChevronRight, Calendar, Play } from "lucide-react"
 
-// 🎯 DATA: Đã cập nhật thêm 6 trận cũ từ Sheet
+// 🎯 DATA: Đã thêm trận mới "Đua Ngựa Siêu Tốc" ngày 18/04 lên đầu
 const SCHEDULE_DATA = [
+  {
+    id: "match-6",
+    date: "18/04",
+    name: "Đua Ngựa Siêu Tốc",
+    reward: 339, // Tổng thưởng: 113 x 3
+    videoUrl: "",
+    winners: ["Đinh Đức Hải", "Trần Việt Thắng", "Tống Văn Nam"]
+  },
+  {
+    id: "match-5",
+    date: "11/04",
+    name: "Hỗn Chiến Mùa Hè",
+    reward: 250,
+    videoUrl: "https://youtu.be/4aCLjk9Jty4",
+    winners: ["Đinh Đức Hải", "Tống Văn Nam", "Nguyễn Hữu Thuận", "Phạm Hoàng Hiệp", "Lê Nguyễn Bảo My"]
+  },
   {
     id: "match-4",
     date: "04/04",
@@ -40,7 +56,6 @@ const SCHEDULE_DATA = [
     videoUrl: "https://youtu.be/z9JF9DWSfX0?si=S3NufEk_gAyGblLZ",
     winners: ["Trần Đăng Minh", "Nguyễn Quang Ninh", "Tống Văn Nam", "Đinh Đức Hải", "Lò Văn Đạt"]
   },
-  // 🕒 DỮ LIỆU CŨ (Trước 14/3)
   {
     id: "match-old-6",
     date: "07/03",
@@ -54,7 +69,7 @@ const SCHEDULE_DATA = [
     date: "28/02",
     name: "*Hỗn Chiến Mùa Đông",
     reward: 250,
-    videoUrl: "",
+    videoUrl: "", 
     winners: ["Nguyễn Hữu Thuận", "Đinh Đức Hải", "Nguyễn Quang Ninh", "Trần Đăng Minh", "Lý Quốc Bảo"]
   },
   {
@@ -62,7 +77,7 @@ const SCHEDULE_DATA = [
     date: "15/02",
     name: "*Random Shotgun",
     reward: 250,
-    videoUrl: "",
+    videoUrl: "https://youtu.be/0tq_4OM-d9s",
     winners: ["Gia Nghĩa", "Đinh Đức Hải", "Bùi Doãn Việt Hùng", "Trần Việt Thắng"]
   },
   {
@@ -70,7 +85,7 @@ const SCHEDULE_DATA = [
     date: "17/01",
     name: "*Prison Run (Sacso)",
     reward: 250,
-    videoUrl: "",
+    videoUrl: "https://youtu.be/q3Cr04XiQdc?si=SsW2SyNJd2mnpniz",
     winners: ["Tống Văn Nam", "Nguyễn Quang Ninh", "Phạm Hoàng Hiệp", "Phạm Văn Chuyên", "Trần Việt Thắng"]
   },
   {
@@ -78,7 +93,7 @@ const SCHEDULE_DATA = [
     date: "10/01",
     name: "*Voxel Canvas Run",
     reward: 250,
-    videoUrl: "",
+    videoUrl: "https://www.youtube.com/watch?v=2wb3o3DSCGM&t=546s",
     winners: ["Đỗ Lê Duy", "Đinh Đức Hải", "Tống Văn Nam", "Phạm Hoàng Hiệp", "Phạm Văn Chuyên"]
   },
   {
@@ -86,7 +101,7 @@ const SCHEDULE_DATA = [
     date: "04/01",
     name: "*Trận Chiến Đá Bóng",
     reward: 250,
-    videoUrl: "",
+    videoUrl: "https://www.youtube.com/watch?v=AhPVuW3035g",
     winners: ["Trần Đăng Minh", "Đinh Đức Hải", "Trần Việt Thắng", "Lý Quốc Bảo", "Tống Văn Nam"]
   }
 ]

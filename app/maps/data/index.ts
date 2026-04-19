@@ -1,19 +1,23 @@
 // Gọi file của Huỳnh
-import { mapSniperAOT } from "./huynh-nguyen/sniperaot"
+import { mapSniperAOT } from "./tuglar/huynh-nguyen/sniperaot"
 
 // Gọi file của Huy Lê 
-import { mapTranChienDaBong } from "./huy-le/tran-chien-da-bong"
+import { mapTranChienDaBong } from "./tuglar/huy-le/tran-chien-da-bong"
 
 // Gọi file của Long Sensei
-import { mapLuuTruXanh } from "./long-sensei/luu-tru-xanh"
+import { mapLuuTruXanh } from "./tuglar/long-sensei/luu-tru-xanh"
 
 // Gọi file của Hoài Ân
-import { mapffffff2PLAYERFFFF002D } from "./hoai-an/2player-2d"
-import { mapObbyKhongDuocNhay } from "./hoai-an/obbykhongduocnhay"
-import { mapParkourBanana } from "./hoai-an/parkourbanana"
-import { mapParkourPanda } from "./hoai-an/parkourpanda"
-import { mapParkourDoraemon } from "./hoai-an/parkourdoraemon"
-import { mapParkourBanhSinhNhat } from "./hoai-an/parkourbanhsinhnhat"
+import { mapffffff2PLAYERFFFF002D } from "./tuglar/hoai-an/2player-2d"
+import { mapObbyKhongDuocNhay } from "./tuglar/hoai-an/obbykhongduocnhay"
+import { mapParkourBanana } from "./tuglar/hoai-an/parkourbanana"
+import { mapParkourPanda } from "./tuglar/hoai-an/parkourpanda"
+import { mapParkourDoraemon } from "./tuglar/hoai-an/parkourdoraemon"
+import { mapParkourBanhSinhNhat } from "./tuglar/hoai-an/parkourbanhsinhnhat"
+import { mapParkourDaoBay } from "./glx/viet-thang/parkourdaobay"
+
+// MAP GLX
+// Gọi file của Việt Thắng
 
 export const mapDetails = {
   "1": mapLuuTruXanh,
@@ -25,4 +29,5 @@ export const mapDetails = {
   "7": mapParkourPanda,
   "8": mapParkourDoraemon,
   "9": mapParkourBanhSinhNhat,
+  "10": mapParkourDaoBay,
 }

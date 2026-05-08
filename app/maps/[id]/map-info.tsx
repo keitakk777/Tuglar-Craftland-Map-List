@@ -2,7 +2,7 @@
 import { User, Gamepad2, Users, Calendar } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
-const CRAFTLAND_AUTHORS = ["Long Sensei", "Huỳnh Nguyễn", "Huy Lê", "Long", "Văn Chuyên"];
+const CRAFTLAND_AUTHORS = ["Long Sensei", "Huỳnh Nguyễn", "Huy Lê", "Long"];
 
 export default function MapInfo({ map, latestVersion }: { map: any, latestVersion: string }) {
   const isOfficialCreator = CRAFTLAND_AUTHORS.includes(map.creator);
@@ -24,7 +24,7 @@ export default function MapInfo({ map, latestVersion }: { map: any, latestVersio
       <div className="grid grid-cols-2 gap-y-6 gap-x-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-border/50">
-             {isOfficialCreator ? <img src="/icon/icon short tuglar dark.png" className="h-6 w-6 object-contain" alt="badge" /> : <User className="h-5 w-5 text-slate-400" />}
+             {isOfficialCreator ? <img src="/verified-badge.webp" className="h-6 w-6 object-contain" alt="badge" /> : <User className="h-5 w-5 text-slate-400" />}
           </div>
           <div className="flex flex-col min-w-0">
              <p className="text-[10px] font-bold text-slate-400 uppercase">Người tạo</p>

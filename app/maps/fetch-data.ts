@@ -35,6 +35,7 @@ export async function getMapsData() {
     const idxDesc = getIdx(["mô tả", "hướng dẫn"]);
     const idxPatch = getIdx(["patch note", "patch"]); 
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
+    const idxPreview = getIdx(["preview", "video", "clip"]); // 🎯 LẤY CỘT VIDEO
 
     const maps = [];
     const seenIds = new Set();
@@ -79,13 +80,21 @@ export async function getMapsData() {
         image: idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]) : "/map-cover/banner-default.png",
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         patchNotes: idxPatch >= 0 ? parsePatchNotes(String(row[idxPatch])) : [],
-        updateDate: rawUpdateDate, // 🎯 Lấy ngày cập nhật thô
+        preview: idxPreview >= 0 ? formatVideoUrl(String(row[idxPreview])) : "", // 🎯 ĐƯA VIDEO VÀO WEB
+        updateDate: rawUpdateDate, 
         timestamp: timeScore 
       });
     }
     maps.sort((a, b) => b.timestamp - a.timestamp);
     return maps;
   } catch (error) { return []; }
+}
+
+// 🎯 HÀM CHUYỂN LINK YOUTUBE THÀNH DẠNG XEM ĐƯỢC TRÊN WEB
+function formatVideoUrl(url) {
+  if (!url || url === "undefined" || url === "PV" || url === "LINK") return "";
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&"'>]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : "";
 }
 
 function parseCSV(str: string) {

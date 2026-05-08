@@ -1,37 +1,42 @@
-"use client"
-import { useParams } from "next/navigation"
-import { useState, useEffect } from "react" 
+// @ts-nocheck
+import { notFound } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
+import { getMapsData } from "../fetch-data"
 
-// 🎯 FIX LỖI: Thêm dấu chấm để nhảy ra ngoài 1 cấp tìm thư mục data
-import { mapDetails } from "../data" 
+import MapCover from "./map-cover"
+import MapActions from "./map-actions"
+import MapInfo from "./map-info"
+import MapPatchNotes from "./map-patch-notes"
 
-import { EmptyState } from "@/components/empty-state"
-import { MapDetailView } from "@/components/map-detail-view"
+export default async function MapDetailPage(props: any) {
+  const params = await props.params;
+  const id = params?.id || "";
+  const data = await getMapsData();
+  const map = data.find((m: any) => m.id === id || m.shortCode === id);
 
-export default function MapDetailPage() {
-  const params = useParams()
-  const mapId = params.id as string
-  
-  // 🎯 Logic lấy data từ kho chung
-  const data = mapDetails[mapId as keyof typeof mapDetails]
-  
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  if (!map) notFound();
 
-  if (!mounted) return null
+  const latestVersion = Array.isArray(map.patchNotes) && map.patchNotes.length > 0 ? String(map.patchNotes[0]?.ver || "v1.0") : "v1.0";
 
-  // 🎯 LOGIC: TRANG DỮ LIỆU TRỐNG / LỖI
-  if (!data) {
-    return (
-      <EmptyState 
-        title="Dữ liệu đang được cập nhật..." 
-        message="Nội dung này hiện chưa có sẵn hoặc đang trong quá trình hoàn thiện. Vui lòng quay lại sau hoặc khám phá các khu vực khác!"
-        buttonText="Quay lại trang chủ"
-        href="/"
-      />
-    )
-  }
+  return (
+    <div className="pb-24 pt-8 md:pt-10 min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 max-w-275">
+        
+        <a href="/maps" className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 transition-colors mb-8">
+          <ArrowLeft className="h-4 w-4" /> QUAY LẠI DANH SÁCH
+        </a>
 
-  // 🎯 LOGIC: HIỂN THỊ CHI TIẾT KHI CÓ DỮ LIỆU
-  return <MapDetailView data={data} />
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+          <div className="w-full lg:w-[45%] flex flex-col gap-5">
+            <MapCover map={map} />
+            <MapActions map={map} />
+          </div>
+          <MapInfo map={map} latestVersion={latestVersion} />
+        </div>
+
+        <MapPatchNotes map={map} />
+
+      </div>
+    </div>
+  )
 }

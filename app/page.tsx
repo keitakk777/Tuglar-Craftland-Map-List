@@ -4,21 +4,24 @@ import { MapCarousel } from "@/components/map-carousel"
 import { TeamCarousel } from "@/components/team-carousel" 
 import { Flame, Shield } from "lucide-react"
 
-// 🎯 IMPORT HÀM HÚT DATA MỚI TẠO
-import { getMapsData } from "./maps/fetch-data" 
+// 🎯 IMPORT CẢ 2 HÀM HÚT DATA (MAP VÀ SỰ KIỆN)
+import { getMapsData, getEventsData } from "./maps/fetch-data" 
+import { EventBanner } from "@/components/event-banner"
 
 const TEAM_LOGOS: Record<string, string> = {
   "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", 
   "GLX Craftland": "/team-avatar/GLX Craftland AVT.jpg",
 }
 
-// 🎯 THÊM CHỮ ASYNC ĐỂ CHỜ DỮ LIỆU TỪ GOOGLE
 export default async function Home() {
   
-  // 🎯 HÚT TOÀN BỘ MAP TỪ GOOGLE SHEETS
-  const ALL_MAPS = await getMapsData();
+  // 🎯 HÚT DATA SONG SONG TỪ SHEET
+  const [ALL_MAPS, ALL_EVENTS] = await Promise.all([
+    getMapsData(),
+    getEventsData()
+  ]);
 
-  // BỘ LỌC MAP (GIỮ NGUYÊN)
+  // BỘ LỌC MAP 
   const trendingMaps = ALL_MAPS.filter(map => map.isTrending);
   const tuglarOriginals = ALL_MAPS.filter(map => map.team === "Tuglar Craftland" || map.isTuglar);
   
@@ -41,8 +44,12 @@ export default async function Home() {
       
       <Header />
       
-      <main className="pt-24 pb-10">
-        <div className="container mx-auto flex flex-col gap-4">
+      <main className="pt-10 pb-10">
+        
+        {/* 🎯 TRUYỀN DATA SỰ KIỆN VÀO BANNER */}
+        <EventBanner events={ALL_EVENTS} />
+
+        <div className="container mx-auto flex flex-col gap-4 mt-8">
           
           {trendingMaps.length > 0 && (
             <MapCarousel title="Đang Thịnh Hành" icon={<Flame className="h-6 w-6 text-orange-500" />} maps={trendingMaps} />

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, Trophy, Users, PlayCircle } from "lucide-react"
+import { Calendar, Clock, Trophy, Users, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 // 🎯 COMPONENT NHỎ CHUYÊN ĐỂ ĐẾM NGƯỢC THỜI GIAN
@@ -51,82 +51,14 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   return <span className="tabular-nums whitespace-nowrap text-[clamp(0.875rem,3vw,1.25rem)] font-bold leading-none">{timeLeft}</span>; 
 };
 
-// --- DỮ LIỆU MẪU SỰ KIỆN ---
-const EVENTS_DATA = [
-  {
-    id: 1,
-    tag: "Cuộc thi",
-    title: "KTS Tháng 4:\nCao Thủ Vũ Khí",
-    description: "Tháng 4 này, Craftland mang đến thử thách mới dành cho các kiến trúc sư tài năng: thiết kế map xoay quanh chủ đề vũ khí – sáng tạo những đấu trường, khu huấn luyện hoặc chế độ chơi độc đáo.",
-    image: "/banner-homepage/kts thang 4.jpg",
-    status: "Đang diễn ra",
-    statusColor: "bg-destructive text-destructive-foreground",
-    prize: "6000",
-    prizeUnit: "Kim cương",
-    participants: "128",
-    date: "1/4 - 20/4", 
-    endTime: "2026-04-20T23:59:59", 
-    actionText: "Tham gia ngay",
-    actionLink: "https://www.facebook.com/groups/craftlandvn/posts/26933664449572676", 
-    hasLiveStream: false 
-  },
-  {
-    id: 2,
-    tag: "Cuộc thi",
-    title: "KTS Tháng 3:\nBùng nổ thể thao",
-    description: "Tháng 3 này, Craftland mời bạn thử sức sáng tạo với chủ đề Các môn thể thao. Hãy xây dựng những sân thi đấu, khu thể thao hoặc không gian giải trí năng động để người chơi có thể trải nghiệm và giao lưu trong thế giới Craftland!",
-    image: "/banner-homepage/kts-thang3.webp",
-    status: "Đã kết thúc",
-    statusColor: "bg-muted-foreground text-white",
-    prize: "4900",
-    prizeUnit: "Kim cương",
-    participants: "22",
-    date: "11.3 - 29.3", 
-    endTime: "", 
-    actionText: "Đang chờ kết quả",
-    actionLink: "https://www.facebook.com/share/p/1CNYeQ7MxT/", 
-    hasLiveStream: false 
-  },
-  {
-    id: 3,
-    tag: "Giải đấu",
-    title: "Đại Chiến Bo Cuối",
-    description: "Cơ hội để những tổ đội phối hợp tác chiến và những tay súng tìm kiếm đồng đội mới đã đến! Giải đấu Đại Chiến Bo Cuối với chính thức lộ diện. Bạn đã sẵn sàng chưa?",
-    image: "/banner-homepage/dai chien bo cuoi.jpg", 
-    status: "Đã kết thúc",
-    statusColor: "bg-muted-foreground text-white",
-    prize: "66",
-    prizeUnit: "Vé quay Chế tác",
-    participants: "24",
-    date: "20-21.12.2025", 
-    endTime: "", 
-    actionText: "Xem kết quả",
-    actionLink: "https://www.facebook.com/share/p/1DXfXuV8Wk/",
-    hasLiveStream: true,
-    liveStreamLink: "https://www.youtube.com/watch?v=s7wM6JZ7BKI&t=3986s", 
-  },
-  {
-   id: 4, 
-    tag: "Cuộc thi",
-    title: "Anh Trai Xây Map\n2025",
-    description: "Giải đấu trải qua 2 vòng thi đầy kịch tính, nơi các kiến trúc sư tranh tài để thiết kế những bản đồ đỉnh cao nhất. Các map xuất sắc sẽ được 'Anh Trai' đích thân lựa chọn để quảng bá rộng rãi trong cộng đồng Craftland.",
-    image: "/banner-homepage/banner-anh-trai-xay-map-2025.jpg",
-    status: "Đã kết thúc",
-    statusColor: "bg-muted-foreground text-white",
-    prize: "260.000",
-    prizeUnit: "VNĐ", 
-    participants: "8",
-    date: "1-30.9.2025", 
-    endTime: "", 
-    actionText: "Xem kết quả",
-    actionLink: "https://www.facebook.com/tuglar.craftland/posts/pfbid0FYxWm1cCiqnbRUdm1XHLDZn6S1RdYjdkEw9SM38WYGUUwYTZbWfzDjFK269kVgQ7l",
-    hasLiveStream: false  
-  }
-]
+// 🎯 COMPONENT CHÍNH
+export function EventBanner({ events }: { events: any[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
 
-export function EventBanner() {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const activeEvent = EVENTS_DATA[activeIndex]
+  // Nếu chưa có data thì ẩn component đi
+  if (!events || events.length === 0) return null;
+
+  const activeEvent = events[activeIndex];
 
   return (
     <section id="events" className="relative overflow-hidden pt-16">
@@ -137,7 +69,8 @@ export function EventBanner() {
         
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-12">
           
-          <div className="w-full max-w-2xl lg:w-1/2 flex flex-col gap-6 relative">
+          {/* CỘT TRÁI: ẢNH + TIẾN ĐỘ + LIST SỰ KIỆN KHÁC */}
+          <div className="w-full max-w-2xl lg:w-1/2 flex flex-col gap-6 relative z-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeEvent.id}
@@ -145,7 +78,7 @@ export function EventBanner() {
                 animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, scale: 1.05, filter: "blur(4px)" }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="relative aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl shadow-yellow-500/10 group z-10"
+                className="relative aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl shadow-yellow-500/10 group"
               >
                 <div className="absolute inset-0 bg-muted/50" />
                 <img 
@@ -155,7 +88,7 @@ export function EventBanner() {
                 />
                 
                 <div className="absolute left-4 top-4">
-                  <Badge className={`${activeEvent.statusColor} border-none shadow-lg px-3 py-1 text-xs font-bold uppercase tracking-wider`}>
+                  <Badge className={`${activeEvent.status === "Đã kết thúc" ? "bg-muted-foreground text-white" : "bg-destructive text-destructive-foreground"} border-none shadow-lg px-3 py-1 text-xs font-bold uppercase tracking-wider`}>
                     {activeEvent.status === "Đang diễn ra" && (
                       <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-current inline-block" />
                     )}
@@ -165,13 +98,56 @@ export function EventBanner() {
               </motion.div>
             </AnimatePresence>
 
-            <div className="w-full z-10">
+            {/* 🎯 THANH TIẾN ĐỘ SỰ KIỆN */}
+            {activeEvent.milestones?.length > 0 && (
+              <div className="w-full p-6 bg-muted/20 rounded-3xl border border-yellow-500/20 backdrop-blur-md">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6 text-center">
+                  Lộ trình sự kiện
+                </h3>
+                <div className="relative flex justify-between items-start px-4">
+                  {/* Đường line nền (Tối) */}
+                  <div className="absolute top-4 left-6 right-6 h-1.5 bg-slate-800 rounded-full" />
+                  
+                  {/* Đường line chạy tiến độ (Sáng) - Đang set cứng 50% làm mẫu UI */}
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "50%" }} 
+                    className="absolute top-4 left-6 h-1.5 bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full z-10 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
+                  >
+                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] w-full animate-[pulse_2s_infinite]" />
+                  </motion.div>
+
+                  {/* Render các Node */}
+                  {activeEvent.milestones.map((ms: any, idx: number) => {
+                    // Giả lập logic: mốc 0 và 1 đã qua, các mốc sau chưa tới
+                    const isPassed = idx <= 1; 
+                    
+                    return (
+                      <div key={idx} className="relative z-20 flex flex-col items-center gap-2 w-16">
+                        <div className={`h-8 w-8 rounded-full border-4 flex items-center justify-center transition-all shadow-lg
+                          ${isPassed ? 'bg-yellow-500 border-yellow-200' : 'bg-slate-900 border-slate-700'}`}
+                        >
+                          {isPassed ? <CheckCircle2 className="h-4 w-4 text-black" /> : <div className="h-2 w-2 bg-slate-500 rounded-full" />}
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-[10px] font-black text-foreground leading-none">{ms.date}</p>
+                          <p className={`text-[9px] font-bold uppercase ${isPassed ? 'text-yellow-500' : 'text-muted-foreground'}`}>{ms.label}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* BOX CHỌN SỰ KIỆN KHÁC */}
+            <div className="w-full">
               <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 Các sự kiện khác
               </h3>
               
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                {EVENTS_DATA.map((event, index) => {
+                {events.map((event, index) => {
                   const isActive = activeIndex === index;
                   return (
                     <div 
@@ -190,12 +166,10 @@ export function EventBanner() {
                         alt={event.title} 
                         className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} 
                       />
-                      
                       <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? 'bg-black/10' : 'bg-black/40 group-hover:bg-black/20'}`} />
-                      
-                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                        <p className={`text-xs font-bold line-clamp-1 transition-colors ${isActive ? 'text-yellow-400' : 'text-white'}`}>
-                          {event.title}
+                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                        <p className={`text-[10px] font-bold line-clamp-2 transition-colors ${isActive ? 'text-yellow-400' : 'text-white'}`}>
+                          {event.title.replace('\n', ' ')}
                         </p>
                       </div>
                     </div>
@@ -204,11 +178,12 @@ export function EventBanner() {
               </div>
             </div>
 
-            <div className="absolute -bottom-4 -right-4 h-32 w-32 rounded-full bg-yellow-500/20 blur-3xl" />
-            <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl" />
+            <div className="absolute -bottom-4 -right-4 h-32 w-32 rounded-full bg-yellow-500/20 blur-3xl -z-10" />
+            <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl -z-10" />
           </div>
           
-          <div className="flex w-full flex-col gap-6 lg:w-1/2 flex-1">
+          {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
+          <div className="flex w-full flex-col gap-6 lg:w-1/2 flex-1 relative z-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeEvent.id}
@@ -222,7 +197,6 @@ export function EventBanner() {
                   <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
                     {activeEvent.tag}
                   </Badge>
-                  {/* 🎯 Đã sửa leading-[1.1] thành leading-[1.25] để khoảng cách dòng giãn ra, hết bị cắn dấu */}
                   <h1 className="whitespace-pre-line text-balance text-3xl font-bold leading-[1.25] md:text-4xl lg:text-5xl uppercase">
                     {activeEvent.title}
                   </h1>
@@ -233,7 +207,6 @@ export function EventBanner() {
                 
                 <div className={`grid grid-cols-2 gap-4 ${activeEvent.status === "Đã kết thúc" ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
                   
-                  {/* BOX 1: Giải thưởng */}
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Trophy className="mb-1.5 h-4 w-4 text-yellow-500" />
                     <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
@@ -244,7 +217,6 @@ export function EventBanner() {
                     </p>
                   </div>
                   
-                  {/* BOX 2: Tham gia */}
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Users className="mb-1.5 h-4 w-4 text-yellow-500" />
                     <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
@@ -253,7 +225,6 @@ export function EventBanner() {
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tham gia</p>
                   </div>
 
-                  {/* BOX 3: Thời gian */}
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Calendar className="mb-1.5 h-4 w-4 text-yellow-500 shrink-0" />
                     <p className="whitespace-nowrap text-[clamp(0.8rem,3vw,1.1rem)] font-bold text-foreground leading-none tracking-tighter">
@@ -262,7 +233,6 @@ export function EventBanner() {
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Thời gian</p>
                   </div>
 
-                  {/* BOX 4: Còn lại */}
                   {activeEvent.status !== "Đã kết thúc" && (
                     <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                       <Clock className="mb-1.5 h-4 w-4 text-yellow-500" />
@@ -277,19 +247,9 @@ export function EventBanner() {
                 <div className="flex flex-wrap gap-3 mt-2">
                   <a href={activeEvent.actionLink} target="_blank" rel="noopener noreferrer">
                     <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold uppercase tracking-wider rounded-xl h-12 px-8 shadow-md shadow-yellow-500/20">
-                      {activeEvent.actionText}
+                      {activeEvent.actionText || "Tham gia ngay"}
                     </Button>
                   </a>
-                  
-                  {/* 🎯 ĐÃ BỌC THẺ A VÀO NÚT WATCH LIVE */}
-                  {activeEvent.hasLiveStream && activeEvent.liveStreamLink && (
-                    <a href={activeEvent.liveStreamLink} target="_blank" rel="noopener noreferrer">
-                      <Button size="lg" variant="outline" className="gap-2 border-border/50 hover:bg-muted/50 hover:text-yellow-600 font-bold uppercase tracking-wider rounded-xl h-12">
-                        <PlayCircle className="h-4 w-4" />
-                        Watch Live
-                      </Button>
-                    </a>
-                  )}
                 </div>
               </motion.div>
             </AnimatePresence>

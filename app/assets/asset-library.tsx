@@ -1,18 +1,24 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Search, Copy, Check, Cpu, User2, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 
 export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: any[] }) {
   const [search, setSearch] = useState("")
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  
   const [selectedType, setSelectedType] = useState("Tất cả")
   const [selectedTheme, setSelectedTheme] = useState("Tất cả")
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false)
+  const [tempType, setTempType] = useState("Tất cả")
+  const [tempTheme, setTempTheme] = useState("Tất cả")
 
   const allTypes = useMemo(() => {
     const types = new Set(["Tất cả"])
@@ -41,30 +47,53 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
     })
   }, [search, selectedType, selectedTheme, initialAssets])
 
+  useEffect(() => {
+    if (isMobileSheetOpen) {
+      setTempType(selectedType)
+      setTempTheme(selectedTheme)
+    }
+  }, [isMobileSheetOpen, selectedType, selectedTheme])
+
+  const handleApplyMobile = () => {
+    setSelectedType(tempType)
+    setSelectedTheme(tempTheme)
+    setIsMobileSheetOpen(false)
+  }
+
+  const handleResetMobile = () => {
+    setTempType("Tất cả")
+    setTempTheme("Tất cả")
+  }
+
   const handleCopy = (code: string, id: string) => {
     navigator.clipboard.writeText(code); setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
+  const isFilterActive = selectedType !== "Tất cả" || selectedTheme !== "Tất cả"
+
   return (
-    <div className="space-y-8">
-      {/* Search & Filter Bar */}
-      <div className="sticky top-20 z-40 bg-background/95 backdrop-blur-md p-4 rounded-2xl border border-border shadow-xl space-y-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative w-full md:flex-1">
+    <div className="space-y-8 pb-20 md:pb-0">
+      
+      {/* 🎯 THANH TÌM KIẾM (Đã fix lỗi căn lề tàng hình & khôi phục Sticky cho Mobile) */}
+      <div className="sticky top-4 md:top-20 z-30 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl transition-all">
+        
+        <div className="flex items-center gap-4">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Tìm tên, mã code hoặc nội dung mô tả..." 
-              className="pl-10 h-12 bg-muted/50 border-border rounded-xl focus:ring-yellow-500 text-sm"
+              className="pl-10 h-12 bg-muted/50 border-border rounded-xl focus:ring-yellow-500 text-sm w-full"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           
+          {/* Nút Lọc này CHỈ HIỆN TRÊN PC */}
           <Button 
             variant="outline" 
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`h-12 rounded-xl gap-2 font-bold uppercase text-[10px] tracking-widest transition-colors ${showAdvanced ? 'bg-yellow-500 text-black border-transparent hover:bg-yellow-600' : 'border-border hover:border-yellow-500/50'}`}
+            className={`hidden md:flex h-12 rounded-xl gap-2 font-bold uppercase text-[10px] tracking-widest transition-colors shrink-0 ${showAdvanced ? 'bg-yellow-500 text-black border-transparent hover:bg-yellow-600' : 'border-border hover:border-yellow-500/50'}`}
           >
             <Filter size={14} />
             Lọc chi tiết
@@ -72,49 +101,50 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </Button>
         </div>
 
-        {/* 🎯 BỘ LỌC CƠ BẢN (TYPE) */}
-        <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
-          {allTypes.map(type => (
-            <Button
-              key={type}
-              variant={selectedType === type ? "default" : "outline"}
-              onClick={() => setSelectedType(type)}
-              className={`rounded-full px-5 whitespace-nowrap h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
-                selectedType === type ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background hover:border-yellow-500/50 text-foreground'
-              }`}
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
+        {/* 🎯 BỘ LỌC CHỈ HIỆN TRÊN PC (Gom chung 1 cục để chống lỗi đùn padding trên Mobile) */}
+        <div className="hidden md:block">
+          <div className="flex gap-2 overflow-x-auto pb-2 mt-4 [&::-webkit-scrollbar]:hidden">
+            {allTypes.map(type => (
+              <Button
+                key={type}
+                variant={selectedType === type ? "default" : "outline"}
+                onClick={() => setSelectedType(type)}
+                className={`rounded-full px-5 whitespace-nowrap h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
+                  selectedType === type ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background hover:border-yellow-500/50 text-foreground'
+                }`}
+              >
+                {type}
+              </Button>
+            ))}
+          </div>
 
-        {/* 🎯 BỘ LỌC CHI TIẾT (THEME - ĐÃ FIX MÀU & BỎ DẤU #) */}
-        <AnimatePresence>
-          {showAdvanced && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }} 
-              animate={{ height: "auto", opacity: 1 }} 
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden pt-4 border-t border-border"
-            >
-              <p className="text-[10px] font-black uppercase text-muted-foreground mb-3 tracking-widest">Lọc theo chủ đề:</p>
-              <div className="flex flex-wrap gap-2">
-                {allThemes.map(theme => (
-                  <Button
-                    key={theme}
-                    variant={selectedTheme === theme ? "default" : "outline"}
-                    onClick={() => setSelectedTheme(theme)}
-                    className={`rounded-full px-4 h-8 font-bold text-[9px] uppercase tracking-wider transition-all ${
-                      selectedTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-yellow-500/50'
-                    }`}
-                  >
-                    {theme}
-                  </Button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <AnimatePresence>
+            {showAdvanced && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: "auto", opacity: 1 }} 
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden pt-4 border-t border-border mt-2"
+              >
+                <p className="text-[10px] font-black uppercase text-muted-foreground mb-3 tracking-widest">Lọc theo chủ đề:</p>
+                <div className="flex flex-wrap gap-2">
+                  {allThemes.map(theme => (
+                    <Button
+                      key={theme}
+                      variant={selectedTheme === theme ? "default" : "outline"}
+                      onClick={() => setSelectedTheme(theme)}
+                      className={`rounded-full px-4 h-8 font-bold text-[9px] uppercase tracking-wider transition-all ${
+                        selectedTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-yellow-500/50'
+                      }`}
+                    >
+                      {theme}
+                    </Button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Asset Grid */}
@@ -160,6 +190,78 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           ))}
         </AnimatePresence>
       </div>
+
+      {/* 🎯 TAB BỘ LỌC POPUP CHO MOBILE */}
+      <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+        <SheetTrigger asChild>
+          <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-[0_10px_40px_rgba(234,179,8,0.3)] md:hidden z-50 bg-yellow-500 hover:bg-yellow-600 text-black border border-yellow-400">
+            <Filter size={24} />
+            {isFilterActive && (
+              <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+            )}
+          </Button>
+        </SheetTrigger>
+        
+        <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] flex flex-col p-6 bg-background/95 backdrop-blur-xl border-t border-border z-[60]">
+          <SheetHeader className="pb-4 border-b border-border">
+            <SheetTitle className="text-left font-black uppercase tracking-widest text-foreground">Bộ lọc phân loại</SheetTitle>
+          </SheetHeader>
+          
+          <div className="flex-1 overflow-y-auto py-6 space-y-8 [&::-webkit-scrollbar]:hidden">
+            <div className="space-y-3">
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                Loại Asset
+              </p>
+              <div className="flex flex-wrap gap-2">
+                 {allTypes.map(type => (
+                    <Button
+                      key={type}
+                      variant={tempType === type ? "default" : "outline"}
+                      onClick={() => setTempType(type)}
+                      className={`rounded-full px-5 h-10 font-bold uppercase text-[10px] tracking-widest transition-all ${
+                        tempType === type ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20' : 'border-border bg-background'
+                      }`}
+                    >
+                      {type}
+                    </Button>
+                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                Chủ đề
+              </p>
+              <div className="flex flex-wrap gap-2">
+                 {allThemes.map(theme => (
+                    <Button
+                      key={theme}
+                      variant={tempTheme === theme ? "default" : "outline"}
+                      onClick={() => setTempTheme(theme)}
+                      className={`rounded-full px-4 h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
+                        tempTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20' : 'border-border bg-background'
+                      }`}
+                    >
+                      {theme}
+                    </Button>
+                 ))}
+              </div>
+            </div>
+          </div>
+
+          <SheetFooter className="flex flex-row gap-3 pt-4 border-t border-border mt-auto">
+            <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold uppercase text-[10px] tracking-widest border-border" onClick={handleResetMobile}>
+              Reset bộ lọc
+            </Button>
+            <Button className="flex-1 rounded-xl h-12 bg-yellow-500 text-black hover:bg-yellow-600 font-bold uppercase text-[10px] tracking-widest" onClick={handleApplyMobile}>
+              Áp dụng
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
     </div>
   )
 }

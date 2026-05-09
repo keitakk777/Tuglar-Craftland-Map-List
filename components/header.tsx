@@ -23,30 +23,36 @@ export function Header() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
   const pathname = usePathname()
   const [activeSection, setActiveSection] = useState("")
+  
+  // 🎯 FIX 1: Dùng useRef thay vì useState để không gây re-render vô hạn
+  const lastScrollY = useRef(0)
   const isClickNavigating = useRef(false)
 
+  // 🎯 FIX 2: Tách mounted ra chạy độc lập đúng 1 lần khi load web
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-      
-      // 🎯 BỔ SUNG: Kiểm tra xem có phải màn hình Mobile không (< 768px là điện thoại)
       const isMobileView = window.innerWidth < 768;
 
-      // Chỉ ẩn Menu khi đang ở Mobile VÀ cuộn xuống
-      if (isMobileView && currentScrollY > lastScrollY && currentScrollY > 100) {
+      // Dùng lastScrollY.current để so sánh
+      if (isMobileView && currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsVisible(false) 
       } else {
-        // Nếu là PC hoặc đang cuộn lên thì luôn hiện
         setIsVisible(true) 
       }
-      setLastScrollY(currentScrollY)
+      
+      // Cập nhật vị trí cuộn mới vào két sắt (không làm re-render)
+      lastScrollY.current = currentScrollY
 
       if (window.location.pathname !== "/") return
       if (isClickNavigating.current) return 
+      
       const scrollPosition = window.scrollY + 100 
       let found = false
       for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
@@ -64,7 +70,7 @@ export function Header() {
     
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [lastScrollY, pathname]) 
+  }, [pathname]) // 🎯 FIX 3: Đã đá "lastScrollY" ra khỏi mảng phụ thuộc
 
   const logoSrc = "/Logo Full Tuglar Craftland new.png"
 

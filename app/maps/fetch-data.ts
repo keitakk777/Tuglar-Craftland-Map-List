@@ -1,11 +1,11 @@
 // @ts-nocheck
-const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH BANNER%3C/text%3E%3C/svg%3E";
+const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH%3C/text%3E%3C/svg%3E";
 
 // ==========================================
-// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (DÙNG CHUNG)
+// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (ĐÃ FIX LỖI TÀNG HÌNH ẢNH)
 // ==========================================
 export function getDirectImageUrl(rawUrl: string) {
-  if (!rawUrl || rawUrl === "undefined") return ERROR_IMAGE;
+  if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
   
   if (rawUrl.includes("googleusercontent.com") || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
     return rawUrl;
@@ -15,7 +15,7 @@ export function getDirectImageUrl(rawUrl: string) {
   const match = rawUrl.match(driveRegex);
   
   if (match && match[1]) {
-    // Ép ID đó thành link ảnh xịn của Google
+    // 🎯 ĐÃ FIX: Dùng dấu $ chuẩn chỉ và dùng server lh3 của Google
     return `https://lh3.googleusercontent.com/d/${match[1]}`;
   }
 
@@ -34,14 +34,8 @@ export async function getMapsData() {
     const rows = parseCSV(csvText);
     if (rows.length < 2) return [];
 
-    let headerIdx = -1;
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-      const rowStr = rows[i].join("").toLowerCase();
-      if ((rowStr.includes("tên") || rowStr.includes("name")) && (rowStr.includes("mã") || rowStr.includes("code"))) {
-        headerIdx = i; break;
-      }
-    }
-    if (headerIdx === -1) return [];
+    let headerIdx = rows.findIndex(r => r.join("").toLowerCase().includes("tên") || r.join("").toLowerCase().includes("name"));
+    if (headerIdx === -1) headerIdx = 1;
 
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
     const getIdx = (keys: string[]) => {
@@ -116,10 +110,10 @@ export async function getMapsData() {
         patchNotes: idxPatch >= 0 ? parsePatchNotes(String(row[idxPatch])) : [],
         preview: idxPreview >= 0 ? formatVideoUrl(String(row[idxPreview])) : "",
         updateDate: rawUpdateDate, 
-        timestamp: timeScore 
+        sortTime: timeScore 
       });
     }
-    maps.sort((a, b) => b.timestamp - a.timestamp);
+    maps.sort((a, b) => b.sortTime - a.sortTime); // Mới nhất lên đầu
     return maps;
   } catch (error) { return []; }
 }
@@ -138,15 +132,15 @@ export async function getEventsData() {
     return rows.slice(2).map(row => {
       if (!row[0]) return null; 
 
-      // 🎯 Dùng hàm chung để tự cắt link ảnh Banner
       let bannerUrl = row[4] || ""; 
       let banner = getDirectImageUrl(bannerUrl);
 
-      const rawMilestones = row[14] || "";
-      const milestones = rawMilestones.split(";").map(m => {
-        const [date, label] = m.split("|");
-        return { date, label };
-      }).filter(m => m.date);
+      const rawMilestones = row[14] ? String(row[14]) : "";
+      const milestones = rawMilestones.split(";").filter(Boolean).map(m => {
+        const parts = m.split("|");
+        if (parts.length < 2) return null;
+        return { date: parts[0].trim(), label: parts[1].trim() };
+      }).filter(m => m !== null);
 
       let endTimeStr = row[11] || "";
       if (endTimeStr && endTimeStr.includes("/")) {
@@ -159,18 +153,18 @@ export async function getEventsData() {
 
       return {
         id: row[0],
-        tag: row[1],
-        title: row[2].replace(/\\n/g, '\n'),
-        description: row[3],
+        tag: row[1] || "Sự kiện",
+        title: (row[2] || "").replace(/\\n/g, '\n'),
+        description: row[3] || "",
         image: banner,
-        status: row[6],
-        prize: row[7],
-        prizeUnit: row[8],
+        status: row[6] || "Đang diễn ra",
+        prize: row[7] || "",
+        prizeUnit: row[8] || "",
         participants: row[9] || "0",
-        date: row[10],
+        date: row[10] || "",
         endTime: endTimeStr,
-        actionText: row[12],
-        actionLink: row[13],
+        actionText: row[12] || "Tham gia",
+        actionLink: row[13] || "#",
         milestones: milestones
       };
     }).filter(Boolean); 
@@ -182,10 +176,9 @@ export async function getEventsData() {
 }
 
 // ==========================================
-// 4. HÀM HÚT DATA KHO ASSET (THÔNG MINH TỰ DÒ CỘT)
+// 4. HÀM HÚT DATA KHO ASSET 
 // ==========================================
 export async function getAssetsData() {
-  // ⚠️ KIỂM TRA LẠI: Đảm bảo đây ĐÚNG là link Publish CSV của tab "Kho Asset" nha!
   const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1608901754&single=true&output=csv";
 
   try {
@@ -196,11 +189,10 @@ export async function getAssetsData() {
     const rows = parseCSV(csvText); 
     if (rows.length < 2) return [];
 
-    // 🎯 TỰ ĐỘNG DÒ TÌM VỊ TRÍ CỘT (Khỏi lo ní đổi thứ tự)
     let headerIdx = -1;
     for (let i = 0; i < Math.min(5, rows.length); i++) {
       const rowStr = rows[i].join("").toLowerCase();
-      if (rowStr.includes("asset name") || rowStr.includes("asset code") || rowStr.includes("tag")) {
+      if (rowStr.includes("asset name") || rowStr.includes("asset code") || rowStr.includes("type")) {
         headerIdx = i; break;
       }
     }
@@ -219,19 +211,15 @@ export async function getAssetsData() {
     const idxPreview = getIdx(["preview link", "preview", "link"]);
     const idxDesc = getIdx(["description", "mô tả"]);
     const idxCapacity = getIdx(["capacity", "tải trọng", "dung lượng"]);
-    const idxType = getIdx(["type", "loại"]);
-    const idxTag = getIdx(["tag", "thể loại"]);
+    const idxType = getIdx(["type", "loại asset", "loại"]);
+    const idxTheme = getIdx(["theme", "chủ đề"]);
     const idxCode = getIdx(["asset code", "mã"]);
 
-    // Map dữ liệu
     return rows.slice(headerIdx + 1).map((row, index) => {
       if (!row || row.length < 3) return null;
 
       let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
-      if (!rawName) return null; // Nếu không có tên thì bỏ qua dòng đó
-
-      const rawTags = idxTag >= 0 && row[idxTag] ? String(row[idxTag]) : "";
-      const tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
+      if (!rawName) return null; 
 
       let rawPreview = idxPreview >= 0 && row[idxPreview] ? String(row[idxPreview]) : "";
 
@@ -242,8 +230,8 @@ export async function getAssetsData() {
         name: rawName,
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         capacity: idxCapacity >= 0 && row[idxCapacity] ? String(row[idxCapacity]) : "",
-        type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Miễn phí",
-        tags: tagsList,
+        type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Khác",
+        theme: idxTheme >= 0 && row[idxTheme] ? String(row[idxTheme]) : "Tự do",
         shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : ""
       };
     }).filter(Boolean); 
@@ -253,7 +241,6 @@ export async function getAssetsData() {
     return [];
   }
 }
-
 
 // ==========================================
 // 5. CÁC HÀM TIỆN ÍCH HỖ TRỢ

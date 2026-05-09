@@ -182,11 +182,11 @@ export async function getEventsData() {
 }
 
 // ==========================================
-// 4. HÀM HÚT DATA KHO ASSET (THÔNG MINH TỰ DÒ CỘT)
+// 4. HÀM HÚT DATA KHO ASSET (ĐÃ THÊM DÒ CỘT LƯỢT TẢI)
 // ==========================================
 export async function getAssetsData() {
   // ⚠️ KIỂM TRA LẠI: Đảm bảo đây ĐÚNG là link Publish CSV của tab "Kho Asset" nha!
-  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1608901754&single=true&output=csv";
+  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=ĐIỀN_GID_KHO_ASSET_VÀO_ĐÂY&single=true&output=csv";
 
   try {
     const res = await fetch(ASSET_SHEET_URL, { next: { revalidate: 60 } });
@@ -196,7 +196,6 @@ export async function getAssetsData() {
     const rows = parseCSV(csvText); 
     if (rows.length < 2) return [];
 
-    // 🎯 TỰ ĐỘNG DÒ TÌM VỊ TRÍ CỘT (Khỏi lo ní đổi thứ tự)
     let headerIdx = -1;
     for (let i = 0; i < Math.min(5, rows.length); i++) {
       const rowStr = rows[i].join("").toLowerCase();
@@ -222,13 +221,14 @@ export async function getAssetsData() {
     const idxType = getIdx(["type", "loại"]);
     const idxTag = getIdx(["tag", "thể loại"]);
     const idxCode = getIdx(["asset code", "mã"]);
+    // 🎯 Tự động dò cột lượt tải
+    const idxDownloads = getIdx(["lượt tải", "downloads", "copy"]); 
 
-    // Map dữ liệu
     return rows.slice(headerIdx + 1).map((row, index) => {
       if (!row || row.length < 3) return null;
 
       let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
-      if (!rawName) return null; // Nếu không có tên thì bỏ qua dòng đó
+      if (!rawName) return null;
 
       const rawTags = idxTag >= 0 && row[idxTag] ? String(row[idxTag]) : "";
       const tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
@@ -244,7 +244,9 @@ export async function getAssetsData() {
         capacity: idxCapacity >= 0 && row[idxCapacity] ? String(row[idxCapacity]) : "",
         type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Miễn phí",
         tags: tagsList,
-        shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : ""
+        shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "",
+        // 🎯 Lấy con số lượt tải về web
+        downloads: idxDownloads >= 0 && row[idxDownloads] ? parseInt(row[idxDownloads]) || 0 : 0
       };
     }).filter(Boolean); 
 

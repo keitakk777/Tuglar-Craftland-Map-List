@@ -4,7 +4,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation" 
 import { Button } from "@/components/ui/button"
-// 🎯 Đã gộp toàn bộ icon vào 1 dòng gọn gàng, bỏ Wrench, thêm Code và Box
 import { Menu, X, Sun, Moon, Search, Hammer, Code, Box } from "lucide-react" 
 import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
@@ -12,7 +11,6 @@ import { motion, AnimatePresence } from "framer-motion"
 
 const REGISTER_LINK = "https://www.facebook.com/share/p/1CHwyRwAYp/"
 
-// 🎯 Đã cập nhật đủ 4 trang mới của ní
 const NAV_LINKS = [
   { id: "custom-btx", label: "Custom BTX", href: "/custom-btx" }, 
   { id: "all-maps", label: "Kho Map", href: "/maps" }, 
@@ -34,9 +32,15 @@ export function Header() {
     setMounted(true)
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      
+      // 🎯 BỔ SUNG: Kiểm tra xem có phải màn hình Mobile không (< 768px là điện thoại)
+      const isMobileView = window.innerWidth < 768;
+
+      // Chỉ ẩn Menu khi đang ở Mobile VÀ cuộn xuống
+      if (isMobileView && currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false) 
       } else {
+        // Nếu là PC hoặc đang cuộn lên thì luôn hiện
         setIsVisible(true) 
       }
       setLastScrollY(currentScrollY)
@@ -57,6 +61,7 @@ export function Header() {
       }
       if (window.scrollY < 100 || !found) setActiveSection("")
     }
+    
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [lastScrollY, pathname]) 
@@ -98,7 +103,6 @@ export function Header() {
               return (
                 <Link key={link.id} href={link.href} onClick={() => handleNavClick(link.id, isAnchor)} className={`relative flex h-full items-center px-1 text-sm font-bold transition-colors hover:text-yellow-500 ${isActive ? "text-yellow-500" : "text-slate-300"}`}>
                   <span className="relative z-10 flex items-center gap-2">
-                    {/* 🎯 Đã map đúng 4 icon cho 4 menu trên Desktop */}
                     {link.id === "custom-btx" && <Hammer className="h-4 w-4" />}
                     {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.id === "assets" && <Box className="h-4 w-4" />}
@@ -147,7 +151,6 @@ export function Header() {
                 const isActive = isAnchor ? (pathname === "/" && activeSection === link.id) : (pathname === link.href)
                 return (
                   <Link key={link.id} href={link.href} onClick={() => { setIsMenuOpen(false); handleNavClick(link.id, isAnchor) }} className={`flex items-center gap-3 rounded-xl px-5 py-4 text-sm font-bold transition-all ${isActive ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : "text-slate-300 border border-transparent hover:bg-white/10"}`}>
-                    {/* 🎯 Đã map đúng 4 icon cho 4 menu trên Mobile */}
                     {link.id === "custom-btx" && <Hammer className="h-4 w-4" />}
                     {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.id === "assets" && <Box className="h-4 w-4" />}

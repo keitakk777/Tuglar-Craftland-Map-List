@@ -186,7 +186,7 @@ export async function getEventsData() {
 // ==========================================
 export async function getAssetsData() {
   // ⚠️ KIỂM TRA LẠI: Đảm bảo đây ĐÚNG là link Publish CSV của tab "Kho Asset" nha!
-  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=ĐIỀN_GID_KHO_ASSET_VÀO_ĐÂY&single=true&output=csv";
+  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1608901754&single=true&output=csv";
 
   try {
     const res = await fetch(ASSET_SHEET_URL, { next: { revalidate: 60 } });

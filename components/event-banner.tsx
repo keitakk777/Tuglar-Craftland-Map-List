@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, Trophy, Users, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-// ⏳ COMPONENT ĐẾM NGƯỢC THỜI GIAN
 const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -51,10 +50,8 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   return <span className="tabular-nums whitespace-nowrap text-[clamp(0.875rem,3vw,1.25rem)] font-bold leading-none">{timeLeft}</span>; 
 };
 
-// 🎯 COMPONENT CHÍNH
 export function EventBanner({ events = [] }: { events?: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  
   const [progressWidth, setProgressWidth] = useState("0%");
   const [passedNodes, setPassedNodes] = useState<boolean[]>([]);
 
@@ -117,16 +114,27 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
     return () => clearInterval(timer);
   }, [activeEvent]);
 
+  const descLength = activeEvent.description?.length || 0;
+  let descClass = "text-sm md:text-base leading-relaxed line-clamp-3 mt-4"; 
+  
+  if (descLength > 250) {
+    descClass = "text-[10px] md:text-[11px] leading-tight line-clamp-[8] mt-1"; 
+  } else if (descLength > 150) {
+    descClass = "text-[11px] md:text-xs leading-snug line-clamp-6 mt-2"; 
+  } else if (descLength > 80) {
+    descClass = "text-xs md:text-sm leading-normal line-clamp-4 mt-3"; 
+  }
+
   return (
     <section id="events" className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-500/10 via-background to-background" />
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-20" />
       
       <div className="container relative mx-auto px-4 pb-16 pt-4 md:pb-24 md:pt-8">
-        <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           
           {/* CỘT TRÁI */}
-          <div className="w-full max-w-2xl lg:w-1/2 flex flex-col gap-6 relative z-10">
+          <div className="w-full lg:w-1/2 flex flex-col gap-6 relative z-10 shrink-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeEvent.id}
@@ -134,7 +142,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                 animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, scale: 1.05, filter: "blur(4px)" }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="relative aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl shadow-yellow-500/10 group"
+                className="relative aspect-[16/9] md:aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl shadow-yellow-500/10 group"
               >
                 <div className="absolute inset-0 bg-muted/50" />
                 <img 
@@ -142,7 +150,6 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                   alt={activeEvent.title} 
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                 />
-                
                 <div className="absolute left-4 top-4">
                   <Badge className={`${activeEvent.status === "Đã kết thúc" ? "bg-muted-foreground text-white" : "bg-destructive text-destructive-foreground"} border-none shadow-lg px-3 py-1 text-xs font-bold uppercase tracking-wider`}>
                     {activeEvent.status === "Đang diễn ra" && (
@@ -154,21 +161,14 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
               </motion.div>
             </AnimatePresence>
 
-            {/* 🎯 THANH TIẾN ĐỘ ĐÃ ĐƯỢC CĂN CHỈNH SÁT MÉP */}
             {activeEvent.milestones && activeEvent.milestones.length > 0 && (
               <div className="w-full p-6 bg-muted/20 rounded-3xl border border-yellow-500/20 backdrop-blur-md">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6 text-center">
                   Lộ trình sự kiện
                 </h3>
-                
-                {/* Lớp bọc an toàn để tính toán chiều ngang */}
                 <div className="relative w-full">
-                  
-                  {/* Đường Line Nền - Nằm chính xác giữa 2 tâm của Node */}
                   <div className="absolute top-[13px] left-8 right-8 h-1.5">
                     <div className="absolute inset-0 bg-slate-800 rounded-full" />
-                    
-                    {/* Đường chạy màu vàng */}
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: progressWidth }} 
@@ -178,8 +178,6 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] w-full animate-[pulse_2s_infinite]" />
                     </motion.div>
                   </div>
-
-                  {/* Vị trí các Node dàn đều tuyệt đối */}
                   <div className="relative flex justify-between items-start z-20">
                     {activeEvent.milestones.map((ms: any, idx: number) => {
                       const isPassed = passedNodes[idx] || false; 
@@ -198,27 +196,102 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                       )
                     })}
                   </div>
-
                 </div>
               </div>
             )}
+            
+            <div className="absolute -bottom-4 -right-4 h-32 w-32 rounded-full bg-yellow-500/20 blur-3xl -z-10" />
+            <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl -z-10" />
+          </div>
+          
+          {/* CỘT PHẢI */}
+          <div className="flex w-full flex-col lg:w-1/2 flex-1 relative z-10">
+            
+            {/* 🎯 Đã gỡ absolute, thay bằng khóa chiều cao cố định để không bị sập */}
+            <div className="w-full h-[470px] sm:h-[420px] md:h-[380px] lg:h-[360px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeEvent.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex flex-col gap-5 h-full"
+                >
+                  <div>
+                    <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
+                      {activeEvent.tag || "Sự kiện"}
+                    </Badge>
+                    <h1 className="whitespace-pre-line text-balance text-3xl font-bold leading-[1.25] md:text-4xl uppercase">
+                      {activeEvent.title}
+                    </h1>
+                    <p className={`text-pretty text-muted-foreground whitespace-pre-line transition-all duration-300 ${descClass}`}>
+                      {activeEvent.description}
+                    </p>
+                  </div>
+                  
+                  <div className={`grid grid-cols-2 gap-4 ${activeEvent.status === "Đã kết thúc" ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+                    <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                      <Trophy className="mb-1.5 h-4 w-4 text-yellow-500" />
+                      <p className="whitespace-nowrap text-[clamp(1rem,3vw,1.2rem)] font-bold text-foreground leading-none">
+                        {activeEvent.prize || "0"}
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {activeEvent.prizeUnit || "Giải thưởng"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                      <Users className="mb-1.5 h-4 w-4 text-yellow-500" />
+                      <p className="whitespace-nowrap text-[clamp(1rem,3vw,1.2rem)] font-bold text-foreground leading-none">
+                        {activeEvent.participants || "0"}
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tham gia</p>
+                    </div>
+                    <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                      <Calendar className="mb-1.5 h-4 w-4 text-yellow-500 shrink-0" />
+                      <p className="whitespace-nowrap text-[clamp(0.8rem,3vw,1rem)] font-bold text-foreground leading-none tracking-tighter">
+                        {activeEvent.date || "Đang cập nhật"}
+                      </p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Thời gian</p>
+                    </div>
+                    {activeEvent.status !== "Đã kết thúc" && activeEvent.endTime && (
+                      <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
+                        <Clock className="mb-1.5 h-4 w-4 text-yellow-500" />
+                        <div className="leading-none text-yellow-500">
+                          <CountdownTimer targetDate={activeEvent.endTime} />
+                        </div>
+                        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Còn lại</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    <a href={activeEvent.actionLink || "#"} target="_blank" rel="noopener noreferrer">
+                      <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold uppercase tracking-wider rounded-xl h-12 px-8 shadow-md shadow-yellow-500/20 active:scale-95 transition-all">
+                        {activeEvent.actionText || "Xem thêm"}
+                      </Button>
+                    </a>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-            {/* CHỌN SỰ KIỆN KHÁC */}
-            <div className="w-full">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
+            {/* 🎯 Bỏ mt-auto, dùng mt-4 để khay sự kiện luôn bám sát đít hộp thông tin */}
+            <div className="w-full shrink-0 pt-6 border-t border-border/50 mt-4">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 Các sự kiện khác
               </h3>
               
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="flex w-full gap-3 overflow-x-auto pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                 {events.map((event, index) => {
                   const isActive = activeIndex === index;
                   return (
                     <div 
                       key={event.id || index}
                       onClick={() => setActiveIndex(index)}
-                      className={`relative aspect-[16/9] cursor-pointer overflow-hidden rounded-xl transition-all duration-300 group
+                      className={`shrink-0 w-32 md:w-36 aspect-[16/9] relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 snap-start group
                         ${isActive 
-                          ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-background shadow-[0_0_15px_rgba(234,179,8,0.3)]' 
+                          ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-background shadow-[0_0_15px_rgba(234,179,8,0.3)] scale-95' 
                           : 'border border-border/50 hover:border-yellow-500/50 opacity-60 hover:opacity-100'
                         }
                       `}
@@ -227,11 +300,11 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                       <img 
                         src={event.image || "/placeholder.jpg"} 
                         alt={event.title} 
-                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} 
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} 
                       />
-                      <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? 'bg-black/10' : 'bg-black/40 group-hover:bg-black/20'}`} />
-                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                        <p className={`text-[10px] font-bold line-clamp-2 transition-colors ${isActive ? 'text-yellow-400' : 'text-white'}`}>
+                      <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? 'bg-black/10' : 'bg-black/50 group-hover:bg-black/30'}`} />
+                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+                        <p className={`text-[9px] font-bold line-clamp-1 transition-colors ${isActive ? 'text-yellow-400' : 'text-white'}`}>
                           {event.title?.replace('\n', ' ')}
                         </p>
                       </div>
@@ -241,83 +314,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
               </div>
             </div>
 
-            <div className="absolute -bottom-4 -right-4 h-32 w-32 rounded-full bg-yellow-500/20 blur-3xl -z-10" />
-            <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl -z-10" />
           </div>
-          
-          {/* CỘT PHẢI */}
-          <div className="flex w-full flex-col gap-6 lg:w-1/2 flex-1 relative z-10">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeEvent.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="flex flex-col gap-6"
-              >
-                <div>
-                  <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
-                    {activeEvent.tag || "Sự kiện"}
-                  </Badge>
-                  <h1 className="whitespace-pre-line text-balance text-3xl font-bold leading-[1.25] md:text-4xl lg:text-5xl uppercase">
-                    {activeEvent.title}
-                  </h1>
-                  <p className="mt-4 text-pretty text-muted-foreground md:text-lg leading-relaxed">
-                    {activeEvent.description}
-                  </p>
-                </div>
-                
-                <div className={`grid grid-cols-2 gap-4 ${activeEvent.status === "Đã kết thúc" ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
-                  
-                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
-                    <Trophy className="mb-1.5 h-4 w-4 text-yellow-500" />
-                    <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
-                      {activeEvent.prize || "0"}
-                    </p>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {activeEvent.prizeUnit || "Giải thưởng"}
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
-                    <Users className="mb-1.5 h-4 w-4 text-yellow-500" />
-                    <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
-                      {activeEvent.participants || "0"}
-                    </p>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tham gia</p>
-                  </div>
-
-                  <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
-                    <Calendar className="mb-1.5 h-4 w-4 text-yellow-500 shrink-0" />
-                    <p className="whitespace-nowrap text-[clamp(0.8rem,3vw,1.1rem)] font-bold text-foreground leading-none tracking-tighter">
-                      {activeEvent.date || "Đang cập nhật"}
-                    </p>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Thời gian</p>
-                  </div>
-
-                  {activeEvent.status !== "Đã kết thúc" && activeEvent.endTime && (
-                    <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
-                      <Clock className="mb-1.5 h-4 w-4 text-yellow-500" />
-                      <div className="leading-none">
-                        <CountdownTimer targetDate={activeEvent.endTime} />
-                      </div>
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Còn lại</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex flex-wrap gap-3 mt-2">
-                  <a href={activeEvent.actionLink || "#"} target="_blank" rel="noopener noreferrer">
-                    <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold uppercase tracking-wider rounded-xl h-12 px-8 shadow-md shadow-yellow-500/20">
-                      {activeEvent.actionText || "Xem thêm"}
-                    </Button>
-                  </a>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
         </div>
       </div>
     </section>

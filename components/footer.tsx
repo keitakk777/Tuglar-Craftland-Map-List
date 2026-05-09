@@ -57,6 +57,7 @@ export function Footer() {
               <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoài Ân</li>
               <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoàng Hiệp</li>
               <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Bảo My</li>
+              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Ninh Nguyễn</li>
             </ul>
           </div>
 

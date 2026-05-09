@@ -2,7 +2,28 @@
 const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH BANNER%3C/text%3E%3C/svg%3E";
 
 // ==========================================
-// 1. HÀM HÚT DATA MAP (CŨ - ĐÃ KHÔI PHỤC)
+// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (DÙNG CHUNG)
+// ==========================================
+export function getDirectImageUrl(rawUrl: string) {
+  if (!rawUrl || rawUrl === "undefined") return ERROR_IMAGE;
+  
+  if (rawUrl.includes("googleusercontent.com") || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+    return rawUrl;
+  }
+
+  const driveRegex = /\/d\/([a-zA-Z0-9_-]+)/;
+  const match = rawUrl.match(driveRegex);
+  
+  if (match && match[1]) {
+    // Ép ID đó thành link ảnh xịn của Google
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  }
+
+  return rawUrl;
+}
+
+// ==========================================
+// 2. HÀM HÚT DATA MAP
 // ==========================================
 export async function getMapsData() {
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
@@ -77,8 +98,8 @@ export async function getMapsData() {
       const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
       const playerTagsList = rawTeamMode.split(",").map(s => s.trim()).filter(Boolean);
 
-      let mapImage = idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]).trim() : "";
-      if (!mapImage || mapImage === "undefined") mapImage = ERROR_IMAGE;
+      let rawImage = idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]).trim() : "";
+      let mapImage = getDirectImageUrl(rawImage);
 
       maps.push({
         id: mapId, 
@@ -104,7 +125,7 @@ export async function getMapsData() {
 }
 
 // ==========================================
-// 2. HÀM HÚT DATA SỰ KIỆN (MỚI)
+// 3. HÀM HÚT DATA SỰ KIỆN 
 // ==========================================
 export async function getEventsData() {
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv";
@@ -114,25 +135,19 @@ export async function getEventsData() {
     const csvText = await res.text();
     const rows = parseCSV(csvText); 
 
-    // Bỏ qua 2 dòng đầu (dòng title và dòng Header)
     return rows.slice(2).map(row => {
       if (!row[0]) return null; 
 
-      // Xử lý link ảnh Drive (Đã fix lỗi cú pháp ${})
-      let banner = row[5] || row[4] || "";
-      if (banner.includes("drive.google.com")) {
-        const fileId = banner.match(/[-\w]{25,}/);
-        if (fileId) banner = `https://lh3.googleusercontent.com/d/$${fileId[0]}`;
-      }
+      // 🎯 Dùng hàm chung để tự cắt link ảnh Banner
+      let bannerUrl = row[4] || ""; 
+      let banner = getDirectImageUrl(bannerUrl);
 
-      // Xử lý Milestones
       const rawMilestones = row[14] || "";
       const milestones = rawMilestones.split(";").map(m => {
         const [date, label] = m.split("|");
         return { date, label };
       }).filter(m => m.date);
 
-      // Fix định dạng ngày đếm ngược
       let endTimeStr = row[11] || "";
       if (endTimeStr && endTimeStr.includes("/")) {
           const parts = endTimeStr.split(" ");
@@ -167,7 +182,81 @@ export async function getEventsData() {
 }
 
 // ==========================================
-// 3. CÁC HÀM TIỆN ÍCH HỖ TRỢ BÊN DƯỚI
+// 4. HÀM HÚT DATA KHO ASSET (THÔNG MINH TỰ DÒ CỘT)
+// ==========================================
+export async function getAssetsData() {
+  // ⚠️ KIỂM TRA LẠI: Đảm bảo đây ĐÚNG là link Publish CSV của tab "Kho Asset" nha!
+  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1608901754&single=true&output=csv";
+
+  try {
+    const res = await fetch(ASSET_SHEET_URL, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    
+    const csvText = await res.text();
+    const rows = parseCSV(csvText); 
+    if (rows.length < 2) return [];
+
+    // 🎯 TỰ ĐỘNG DÒ TÌM VỊ TRÍ CỘT (Khỏi lo ní đổi thứ tự)
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      const rowStr = rows[i].join("").toLowerCase();
+      if (rowStr.includes("asset name") || rowStr.includes("asset code") || rowStr.includes("tag")) {
+        headerIdx = i; break;
+      }
+    }
+    if (headerIdx === -1) return [];
+
+    const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
+    const getIdx = (keys: string[]) => {
+      for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
+      for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
+      return -1;
+    };
+
+    const idxId = getIdx(["id"]);
+    const idxName = getIdx(["asset name", "tên"]);
+    const idxCreator = getIdx(["creator", "người tạo"]);
+    const idxPreview = getIdx(["preview link", "preview", "link"]);
+    const idxDesc = getIdx(["description", "mô tả"]);
+    const idxCapacity = getIdx(["capacity", "tải trọng", "dung lượng"]);
+    const idxType = getIdx(["type", "loại"]);
+    const idxTag = getIdx(["tag", "thể loại"]);
+    const idxCode = getIdx(["asset code", "mã"]);
+
+    // Map dữ liệu
+    return rows.slice(headerIdx + 1).map((row, index) => {
+      if (!row || row.length < 3) return null;
+
+      let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
+      if (!rawName) return null; // Nếu không có tên thì bỏ qua dòng đó
+
+      const rawTags = idxTag >= 0 && row[idxTag] ? String(row[idxTag]) : "";
+      const tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
+
+      let rawPreview = idxPreview >= 0 && row[idxPreview] ? String(row[idxPreview]) : "";
+
+      return {
+        id: idxId >= 0 && row[idxId] ? String(row[idxId]) : `asset-${index}`,
+        creator: idxCreator >= 0 && row[idxCreator] ? String(row[idxCreator]) : "Ẩn danh",
+        image: getDirectImageUrl(rawPreview), 
+        name: rawName,
+        description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
+        capacity: idxCapacity >= 0 && row[idxCapacity] ? String(row[idxCapacity]) : "",
+        type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Miễn phí",
+        tags: tagsList,
+        shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : ""
+      };
+    }).filter(Boolean); 
+
+  } catch (e) {
+    console.error("Lỗi fetch Kho Asset", e);
+    return [];
+  }
+}
+
+
+// ==========================================
+// 5. CÁC HÀM TIỆN ÍCH HỖ TRỢ
 // ==========================================
 function formatVideoUrl(url: string) {
   if (!url || url === "undefined" || url === "PV" || url === "LINK") return "";

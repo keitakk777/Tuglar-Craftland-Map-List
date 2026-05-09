@@ -17,8 +17,8 @@ const vietnameseFont = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: 'Tuglar Craftland - Competitive Gaming',
-  description: 'Khám phá bản đồ, tham gia sự kiện và cập nhật tin tức mới nhất từ Tuglar Craftland',
+  title: 'Tuglar Craftland - Craftland Community Hub',
+  description: 'Khám phá bản đồ, tài nguyên, sự kiện và cập nhật tin tức mới nhất tại Tuglar Craftland',
   generator: 'v0.app',
 }
 

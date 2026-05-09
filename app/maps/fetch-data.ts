@@ -1,4 +1,6 @@
 // @ts-nocheck
+const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH BANNER%3C/text%3E%3C/svg%3E";
+
 export async function getMapsData() {
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
 
@@ -19,19 +21,17 @@ export async function getMapsData() {
 
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
     const getIdx = (keys: string[]) => {
-      for (const key of keys) {
-        const found = headers.findIndex(h => h === key || h.includes(key));
-        if (found !== -1) return found;
-      }
+      for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
+      for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
       return -1;
     };
 
-    const idxName = getIdx(["tên", "name", "tựa game"]);
-    const idxCreator = getIdx(["creator", "tác giả", "người tạo"]);
+    const idxName = getIdx(["name", "tên map", "tựa game", "tên"]);
+    const idxCreator = getIdx(["creator", "người tạo", "tác giả"]);
     const idxCode = getIdx(["mã map", "code", "mã"]);
-    const idxBanner = getIdx(["link web banner", "link banner", "banner"]); 
+    const idxBanner = getIdx(["link banner web", "link banner", "banner"]); 
     const idxGameMode = getIdx(["game mode", "thể loại", "chế độ"]);
-    const idxTeamMode = getIdx(["team mode", "quy mô", "số người"]);
+    const idxTeamMode = getIdx(["team mode", "quy mô"]); 
     const idxDesc = getIdx(["mô tả", "hướng dẫn"]);
     const idxPatch = getIdx(["patch note", "patch"]); 
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
@@ -48,9 +48,7 @@ export async function getMapsData() {
       let rawCode = idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "";
       
       const rowString = row.join(" ");
-      if (rowString.includes("Exception: Service invoked") || rowString.includes("#ERROR!") || rawName.includes("Exception")) {
-        continue; 
-      }
+      if (rowString.includes("Exception: Service invoked") || rowString.includes("#ERROR!") || rawName.includes("Exception")) continue; 
 
       let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
       let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
@@ -73,9 +71,12 @@ export async function getMapsData() {
         if (parts.length >= 3) timeScore = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0])).getTime();
       }
 
-      // 🎯 BỘ TÁCH TAG: Cắt chữ bằng dấu phẩy để biến thành nhiều tag độc lập
       const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
       const playerTagsList = rawTeamMode.split(",").map(s => s.trim()).filter(Boolean);
+
+      // 🎯 Xử lý ảnh: Nếu link trống, gắn ngay ERROR_IMAGE
+      let mapImage = idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]).trim() : "";
+      if (!mapImage || mapImage === "undefined") mapImage = ERROR_IMAGE;
 
       maps.push({
         id: mapId, 
@@ -87,7 +88,7 @@ export async function getMapsData() {
         displayPlayers: rawTeamMode,
         playerTags: playerTagsList.length > 0 ? playerTagsList : ["Tự do"],
         shortCode: mapCode,
-        image: idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]) : "/map-cover/banner-default.png",
+        image: mapImage,
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         patchNotes: idxPatch >= 0 ? parsePatchNotes(String(row[idxPatch])) : [],
         preview: idxPreview >= 0 ? formatVideoUrl(String(row[idxPreview])) : "",

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 
-// ⚠️ NÍ KIỂM TRA KỸ LINK NÀY NHA
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2G8_Zaa9Cy9QKIkULpC1MleZH2YG3_8xzYkeaWkIF4Ih-1IbCwK-7XQrVsSTElR0/exec"
 
 export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: any[] }) {
@@ -35,11 +34,9 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
     navigator.clipboard.writeText(code)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
-
-    // Tăng số trên màn hình ngay lập tức
     setLocalDownloads(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }))
 
-    // Gửi tín hiệu ngầm về Google Sheets (Đã sửa lỗi IF)
+    // 🎯 ĐÃ FIX: Chỉ kiểm tra xem link có chứa script google không là gửi luôn
     if (GAS_API_URL.includes("script.google.com")) {
       fetch(GAS_API_URL, {
         method: "POST",
@@ -80,7 +77,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
                   <h3 className="font-bold text-sm line-clamp-1 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">{asset.name}</h3>
                   <div className="flex items-center justify-between mt-1 mb-3">
                     <div className="flex items-center gap-1.5 text-muted-foreground"><User2 size={12} className="text-yellow-500/70" /><span className="text-[10px] font-bold uppercase tracking-wider">{asset.creator}</span></div>
-                    {/* 🎯 HIỆN CON SỐ LƯỢT TẢI XANH LÈ TẠI ĐÂY */}
                     <div className="flex items-center gap-1 text-muted-foreground bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
                       <DownloadCloud size={10} className="text-blue-400" />
                       <span className="text-[10px] font-bold text-blue-400">{currentDownloads}</span>

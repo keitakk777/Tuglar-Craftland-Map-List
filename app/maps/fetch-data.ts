@@ -5,7 +5,7 @@ const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w
 // 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (DÙNG CHUNG)
 // ==========================================
 export function getDirectImageUrl(rawUrl: string) {
-  if (!rawUrl || rawUrl === "undefined") return ERROR_IMAGE;
+  if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
   
   if (rawUrl.includes("googleusercontent.com") || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
     return rawUrl;
@@ -15,8 +15,8 @@ export function getDirectImageUrl(rawUrl: string) {
   const match = rawUrl.match(driveRegex);
   
   if (match && match[1]) {
-    // Ép ID đó thành link ảnh xịn của Google
-    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    // 🎯 ĐÃ FIX: Thêm dấu $ vào trước {match[1]} để render đúng ID ảnh
+    return `https://lh3.googleusercontent.com/d/$${match[1]}`;
   }
 
   return rawUrl;
@@ -138,7 +138,6 @@ export async function getEventsData() {
     return rows.slice(2).map(row => {
       if (!row[0]) return null; 
 
-      // 🎯 Dùng hàm chung để tự cắt link ảnh Banner
       let bannerUrl = row[4] || ""; 
       let banner = getDirectImageUrl(bannerUrl);
 
@@ -182,11 +181,11 @@ export async function getEventsData() {
 }
 
 // ==========================================
-// 4. HÀM HÚT DATA KHO ASSET (ĐÃ THÊM DÒ CỘT LƯỢT TẢI)
+// 4. HÀM HÚT DATA KHO ASSET (ĐÃ TỐI ƯU)
 // ==========================================
 export async function getAssetsData() {
-  // ⚠️ KIỂM TRA LẠI: Đảm bảo đây ĐÚNG là link Publish CSV của tab "Kho Asset" nha!
-  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=ĐIỀN_GID_KHO_ASSET_VÀO_ĐÂY&single=true&output=csv";
+  // ⚠️ LƯU Ý: Phải dùng GID của Tab "Kho Asset" nhé! 
+  const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1055745499&single=true&output=csv";
 
   try {
     const res = await fetch(ASSET_SHEET_URL, { next: { revalidate: 60 } });
@@ -221,8 +220,7 @@ export async function getAssetsData() {
     const idxType = getIdx(["type", "loại"]);
     const idxTag = getIdx(["tag", "thể loại"]);
     const idxCode = getIdx(["asset code", "mã"]);
-    // 🎯 Tự động dò cột lượt tải
-    const idxDownloads = getIdx(["lượt tải", "downloads", "copy"]); 
+    const idxDownloads = getIdx(["lượt tải", "download", "downloads", "copy"]); 
 
     return rows.slice(headerIdx + 1).map((row, index) => {
       if (!row || row.length < 3) return null;
@@ -234,6 +232,9 @@ export async function getAssetsData() {
       const tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
 
       let rawPreview = idxPreview >= 0 && row[idxPreview] ? String(row[idxPreview]) : "";
+      
+      // 🎯 Xử lý số lượt tải sạch sẽ
+      const rawDown = idxDownloads >= 0 && row[idxDownloads] ? String(row[idxDownloads]).replace(/[^0-9]/g, '') : "0";
 
       return {
         id: idxId >= 0 && row[idxId] ? String(row[idxId]) : `asset-${index}`,
@@ -245,8 +246,7 @@ export async function getAssetsData() {
         type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Miễn phí",
         tags: tagsList,
         shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "",
-        // 🎯 Lấy con số lượt tải về web
-        downloads: idxDownloads >= 0 && row[idxDownloads] ? parseInt(row[idxDownloads]) || 0 : 0
+        downloads: parseInt(rawDown) || 0
       };
     }).filter(Boolean); 
 
@@ -255,7 +255,6 @@ export async function getAssetsData() {
     return [];
   }
 }
-
 
 // ==========================================
 // 5. CÁC HÀM TIỆN ÍCH HỖ TRỢ

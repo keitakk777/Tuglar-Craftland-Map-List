@@ -35,7 +35,7 @@ export async function getMapsData() {
     const idxDesc = getIdx(["mô tả", "hướng dẫn"]);
     const idxPatch = getIdx(["patch note", "patch"]); 
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
-    const idxPreview = getIdx(["preview", "video", "clip"]); // 🎯 LẤY CỘT VIDEO
+    const idxPreview = getIdx(["preview", "video", "clip"]);
 
     const maps = [];
     const seenIds = new Set();
@@ -46,6 +46,12 @@ export async function getMapsData() {
 
       let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
       let rawCode = idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "";
+      
+      const rowString = row.join(" ");
+      if (rowString.includes("Exception: Service invoked") || rowString.includes("#ERROR!") || rawName.includes("Exception")) {
+        continue; 
+      }
+
       let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
       let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
 
@@ -67,20 +73,24 @@ export async function getMapsData() {
         if (parts.length >= 3) timeScore = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0])).getTime();
       }
 
+      // 🎯 BỘ TÁCH TAG: Cắt chữ bằng dấu phẩy để biến thành nhiều tag độc lập
+      const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
+      const playerTagsList = rawTeamMode.split(",").map(s => s.trim()).filter(Boolean);
+
       maps.push({
         id: mapId, 
         name: mapName, 
         creator: idxCreator >= 0 && row[idxCreator] ? String(row[idxCreator]) : "Ẩn danh",
         team: "Tuglar Craftland", 
         displayType: rawGameMode,
-        typeTags: [rawGameMode.trim()],
+        typeTags: typeTagsList.length > 0 ? typeTagsList : ["Chế độ"],
         displayPlayers: rawTeamMode,
-        playerTags: rawTeamMode.split(",").map((s)=>s.trim()).filter(Boolean),
+        playerTags: playerTagsList.length > 0 ? playerTagsList : ["Tự do"],
         shortCode: mapCode,
         image: idxBanner >= 0 && row[idxBanner] ? String(row[idxBanner]) : "/map-cover/banner-default.png",
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         patchNotes: idxPatch >= 0 ? parsePatchNotes(String(row[idxPatch])) : [],
-        preview: idxPreview >= 0 ? formatVideoUrl(String(row[idxPreview])) : "", // 🎯 ĐƯA VIDEO VÀO WEB
+        preview: idxPreview >= 0 ? formatVideoUrl(String(row[idxPreview])) : "",
         updateDate: rawUpdateDate, 
         timestamp: timeScore 
       });
@@ -90,7 +100,6 @@ export async function getMapsData() {
   } catch (error) { return []; }
 }
 
-// 🎯 HÀM CHUYỂN LINK YOUTUBE THÀNH DẠNG XEM ĐƯỢC TRÊN WEB
 function formatVideoUrl(url) {
   if (!url || url === "undefined" || url === "PV" || url === "LINK") return "";
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&"'>]+)/);

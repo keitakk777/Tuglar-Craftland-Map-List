@@ -41,24 +41,18 @@ function MapsContent() {
     });
   }, []);
 
-  useEffect(() => {
-    const teamFromUrl = searchParams.get('team');
-    if (teamFromUrl) {
-      setFilterTeam(String(teamFromUrl));
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [searchParams]);
-
   const filteredMaps = allMaps.filter((map) => {
     if (!map || typeof map !== 'object') return false;
     const name = String(map.name || "").toLowerCase();
     const query = String(searchQuery || "").toLowerCase();
     const matchSearch = name.includes(query);
-    const typeTags = Array.isArray(map.typeTags) ? map.typeTags.filter(t => typeof t === 'string') : [];
-    const playerTags = Array.isArray(map.playerTags) ? map.playerTags.filter(t => typeof t === 'string') : [];
+    const typeTags = Array.isArray(map.typeTags) ? map.typeTags : [];
+    const playerTags = Array.isArray(map.playerTags) ? map.playerTags : [];
+    
     const matchType = filterType === "Tất cả" || typeTags.includes(filterType);
     const matchPlayer = filterPlayer === "Tất cả" || playerTags.includes(filterPlayer);
     const matchTeam = filterTeam === "Tất cả" || String(map.team || "") === filterTeam;
+    
     return matchSearch && matchType && matchPlayer && matchTeam;
   });
 
@@ -71,12 +65,12 @@ function MapsContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const uniqueTypes = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags.filter(t => typeof t === 'string') : []))).sort()];
-  const uniquePlayers = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags.filter(t => typeof t === 'string') : []))).sort((a,b) => a.localeCompare(b, 'vi', {numeric: true}))];
+  const uniqueTypes = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags : []))).sort()];
+  const uniquePlayers = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags : []))).sort((a,b) => a.localeCompare(b, 'vi', {numeric: true}))];
   const uniqueTeams = ["Tất cả", ...Array.from(new Set(allMaps.map(m => m?.team).filter(t => typeof t === 'string'))).sort()];
 
-  const typeCounts = allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags.filter(t => typeof t === 'string') : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
-  const playerCounts = allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags.filter(t => typeof t === 'string') : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
+  const typeCounts = allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
+  const playerCounts = allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
   const teamCounts = allMaps.map(m => m?.team).filter(t => typeof t === 'string').reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
 
   const handleCopy = (e: any, code: string, id: string) => {
@@ -123,7 +117,37 @@ function MapsContent() {
                            {t} {t !== "Tất cả" && <span className="ml-1 opacity-60 font-medium">({typeCounts[t] || 0})</span>}
                         </Badge>
                      ))}
+                     {uniqueTypes.length > LIMIT_TAGS && (
+                        <button onClick={() => setIsExpandedType(!isExpandedType)} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black text-yellow-500 hover:text-yellow-400 transition-colors uppercase tracking-widest">
+                           {isExpandedType ? <>Thu gọn <ChevronUp className="h-4 w-4" /></> : <>Xem thêm ({uniqueTypes.length - LIMIT_TAGS}) <ChevronDown className="h-4 w-4" /></>}
+                        </button>
+                     )}
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/30">
+                   <div className="space-y-4">
+                      <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest"><Users className="h-4 w-4" /> Quy mô / Số người</label>
+                      <div className="flex flex-wrap gap-2.5">
+                         {uniquePlayers.map((p, idx) => (
+                            <Badge key={`${p}-${idx}`} onClick={() => {setFilterPlayer(p); setVisibleCount(40);}} className={`cursor-pointer px-4 py-2 text-[10px] font-bold border-none transition-all hover:scale-105 active:scale-95 ${filterPlayer === p ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'}`}>
+                               {p} {p !== "Tất cả" && <span className="ml-1 opacity-60 font-medium">({playerCounts[p] || 0})</span>}
+                            </Badge>
+                         ))}
+                      </div>
+                   </div>
+                   <div className="space-y-4 md:border-l md:border-border/30 md:pl-8">
+                      <label className="text-xs font-black uppercase text-yellow-500/80 flex items-center gap-2 tracking-widest"><Shield className="h-4 w-4" /> Nhóm sáng tạo</label>
+                      <div className="flex flex-wrap gap-2.5">
+                         {uniqueTeams.map((team, idx) => (
+                            <Badge key={`${team}-${idx}`} onClick={() => {setFilterTeam(team); setVisibleCount(40);}} className={`cursor-pointer px-4 py-2 text-[10px] font-bold border-none flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 ${filterTeam === team ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30' : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'}`}>
+                               {TEAM_LOGOS[team] && <img src={TEAM_LOGOS[team]} className={`h-3.5 w-3.5 object-contain ${filterTeam !== team && 'opacity-70 dark:opacity-80'}`} alt="logo" />}
+                               <span>{team}</span>
+                               {team !== "Tất cả" && <span className="opacity-60 font-medium ml-0.5">({teamCounts[team] || 0})</span>}
+                            </Badge>
+                         ))}
+                      </div>
+                   </div>
                 </div>
              </div>
           </div>
@@ -141,25 +165,18 @@ function MapsContent() {
               onClick={() => router.push(`/maps/${map?.id || ''}`)} 
               className="group/card cursor-pointer block h-full"
             >
-              {/* THÊM gap-0 p-0 ĐỂ ÉP CHẾT KHOẢNG CÁCH NỘI BỘ */}
               <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-md flex flex-col transition-all duration-500 hover:border-yellow-500/50 hover:shadow-2xl rounded-3xl h-full p-0 gap-0">
                 
                 {/* 1. KHUNG ẢNH */}
                 <div className="relative w-full shrink-0 overflow-hidden bg-slate-100" style={{ paddingBottom: '45.36%' }}>
-                  <img 
-                    src={map?.image || "/map-cover/banner-default.png"} 
-                    alt="Map Image" 
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-110" 
-                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/map-cover/banner-default.png"; }} 
-                  />
+                  <img src={map?.image || "/map-cover/banner-default.png"} alt="Map Image" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-110" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/map-cover/banner-default.png"; }} />
                   <div className="absolute left-3 top-3">
-                    <Badge className="bg-black/70 backdrop-blur-md text-white text-[9px] font-bold uppercase border-none">
-                      {String(map?.displayType || "Chế độ")}
-                    </Badge>
+                    {/* 🎯 ƯU TIÊN 1 TAG ĐẦU TIÊN CỦA THỂ LOẠI */}
+                    <Badge className="bg-black/70 backdrop-blur-md text-white text-[9px] font-bold uppercase border-none">{String(map?.typeTags?.[0] || map?.displayType || "Chế độ")}</Badge>
                   </div>
                 </div>
                 
-                {/* 2. NỘI DUNG (p-4 pt-2 ĐỂ DÍNH SÁT ẢNH) */}
+                {/* 2. NỘI DUNG */}
                 <CardContent className="p-4 pt-2 flex flex-col flex-1" onClick={(e) => { e.stopPropagation(); router.push(`/maps/${map?.id || ''}`); }}>
                   <div className="flex flex-col gap-1">
                     <h3 className="text-base font-bold flex items-center gap-2 group-hover/card:text-yellow-500 transition-colors uppercase tracking-tight line-clamp-1">
@@ -168,34 +185,25 @@ function MapsContent() {
                     </h3>
                     
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-yellow-500/50" />
-                        {String(map?.displayPlayers || "Tự do")}
-                      </span>
+                       <Users className="h-3.5 w-3.5 text-yellow-500/50" />
+                       {/* 🎯 ƯU TIÊN 1 TAG ĐẦU TIÊN CỦA QUY MÔ */}
+                       {String(map?.playerTags?.[0] || "Tự do")}
                     </div>
                   </div>
 
-                  {/* Vùng đệm để đẩy nút xuống đáy */}
                   <div className="flex-1 min-h-[12px]"></div>
 
-                  {/* 3. CỤM NÚT BẤM */}
-                  <div className="flex items-center gap-2.5 mt-auto">
-                      <Button 
-                        onClick={(e) => handlePlayNow(e, map?.shortCode)} 
-                        className="flex-1 h-11 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all shadow-md active:scale-95"
-                      >
+                  {/* 3. NÚT BẤM */}
+                  <div className="flex items-center gap-2 mt-auto">
+                      <Button onClick={(e) => { e.stopPropagation(); handlePlayNow(e, map?.shortCode); }} className="flex-1 h-11 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all shadow-md active:scale-95">
                         <Play className="mr-2 h-4 w-4 fill-current" /> CHƠI
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={(e) => handleCopy(e, map?.shortCode, map?.id)} 
-                        className="h-11 w-11 shrink-0 rounded-xl border-border/50 hover:bg-yellow-500/10 active:scale-95"
-                      >
+                      <Button variant="outline" size="icon" onClick={(e) => handleCopy(e, map?.shortCode, map?.id)} className="h-11 w-11 shrink-0 rounded-xl border-border/50 hover:bg-yellow-500/10 active:scale-95">
                         {copiedId === map?.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                       </Button>
                   </div>
                 </CardContent>
+
               </Card>
             </motion.div>
           ))}

@@ -1,11 +1,17 @@
 // @ts-nocheck
-import { Badge } from "@/components/ui/badge"
-
+"use client"
 export default function MapCover({ map }: { map: any }) {
+  const fallbackImage = "/map-cover/Banner Chưa có.png"
+  const displayBanner = map.image || fallbackImage
+
   return (
-    <div className="relative aspect-[485/220] w-full rounded-2xl overflow-hidden shadow-md border border-border/40 bg-slate-900">
-      <img src={map.image} className="absolute inset-0 h-full w-full object-contain" alt="Cover" />
-      {/* 🎯 ĐÃ XÓA PHẦN HIỂN THỊ LIKE VÀ STAR TẠI ĐÂY */}
+    <div className="relative aspect-[485/220] overflow-hidden rounded-2xl border border-border/50 shadow-2xl shadow-yellow-500/10 bg-muted/20">
+      <img 
+        src={displayBanner} 
+        className="h-full w-full object-cover" 
+        alt={map.name || "Map Cover"} 
+        onError={(e) => { e.currentTarget.src = fallbackImage }}
+      />
     </div>
   )
 }

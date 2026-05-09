@@ -1,170 +1,143 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Users, Star, Flame, Play, ChevronLeft, ChevronRight } from "lucide-react"
-import { motion } from "framer-motion" // 🎯 Import framer-motion để làm hiệu ứng Rung
-
-interface MapItem {
-  id: string;
-  name: string;
-  image: string;
-  displayType: string;
-  displayPlayers: string;
-  favourite: string;
-  difficulty: number;
-  featured?: boolean;
-}
+import { Button } from "@/components/ui/button"
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel"
+import { Play, Copy, Check, Gamepad2, Users, Flame } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface MapCarouselProps {
-  title: string;
-  icon?: React.ReactNode;
-  maps: MapItem[];
+  title: string
+  icon: React.ReactNode
+  maps: any[]
 }
 
-const DIFFICULTY_MAP: Record<number, string> = {
-  1: "Siêu Dễ", 2: "Dễ", 3: "Trung Bình", 4: "Khó", 5: "Siêu Khó", 6: "Ác Mộng"
-}
+const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH BANNER%3C/text%3E%3C/svg%3E";
 
 export function MapCarousel({ title, icon, maps }: MapCarouselProps) {
   const router = useRouter()
-  const carouselRef = useRef<HTMLDivElement>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // 🎯 STATES: Theo dõi vị trí cuộn và trạng thái Rung
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(true)
-  const [shakeLeft, setShakeLeft] = useState(false)
-  const [shakeRight, setShakeRight] = useState(false)
-
-  // Hàm kiểm tra xem đã cuộn tới sát lề chưa
-  const checkScroll = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 5);
-    }
+  const handleCopy = (e: React.MouseEvent, code: string, id: string) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(code)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Lắng nghe sự kiện cuộn để cập nhật trạng thái
-  useEffect(() => {
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [maps]);
-
-  // Hàm xử lý bấm nút cuộn hoặc Rung
-  const scroll = (direction: "left" | "right") => {
-    if (!carouselRef.current) return;
-    const { clientWidth } = carouselRef.current;
-
-    if (direction === "left") {
-      if (!canScrollLeft) {
-        // Hết cỡ bên trái -> Kích hoạt Rung
-        setShakeLeft(true);
-        setTimeout(() => setShakeLeft(false), 400);
-      } else {
-        // Trượt nguyên 1 khung màn hình (Cộng thêm 16px là độ rộng của khe hở gap-4)
-        carouselRef.current.scrollBy({ left: -(clientWidth + 16), behavior: "smooth" });
-      }
-    } else {
-      if (!canScrollRight) {
-        // Hết cỡ bên phải -> Kích hoạt Rung
-        setShakeRight(true);
-        setTimeout(() => setShakeRight(false), 400);
-      } else {
-        carouselRef.current.scrollBy({ left: clientWidth + 16, behavior: "smooth" });
-      }
-    }
+  const handlePlayNow = (e: React.MouseEvent, code: string) => {
+    e.stopPropagation()
+    const cleanCode = code.replace("#", "").replace(/FREEFIRE/i, "").trim()
+    window.open(`https://c.freefiremobile.com/?m=1E441${cleanCode}`, "_blank")
   }
-
-  if (!maps || maps.length === 0) return null;
 
   return (
-    <section className="relative w-full py-6 group/section">
-      {/* 🎯 HEADER */}
-      <div className="flex items-center justify-between mb-4 px-4 md:px-8">
-        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-2 text-foreground">
-          {icon}
-          {title}
-        </h2>
-        
-        {/* 🎯 NÚT CUỘN (TRÒN KIỂU CŨ) */}
-        <div className="hidden md:flex items-center gap-2">
-          {/* Mũi tên TRÁI */}
-          <motion.div animate={shakeLeft ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.3 }}>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => scroll("left")} 
-              className={`h-9 w-9 rounded-full border-border/50 transition-all
-                ${!canScrollLeft ? 'opacity-50 cursor-not-allowed bg-muted/20' : 'hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:text-yellow-500'}
-              `}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          </motion.div>
-
-          {/* Mũi tên PHẢI */}
-          <motion.div animate={shakeRight ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.3 }}>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => scroll("right")} 
-              className={`h-9 w-9 rounded-full border-border/50 transition-all
-                ${!canScrollRight ? 'opacity-50 cursor-not-allowed bg-muted/20' : 'hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:text-yellow-500'}
-              `}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </motion.div>
+    <div className="space-y-6 py-6">
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+            {icon}
+          </div>
+          <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-foreground dark:text-white">
+            {title}
+          </h2>
         </div>
-      </div>
-
-      {/* 🎯 VÙNG CUỘN NGANG (SWIMLANE) - ĐÃ FIX KHUNG VUÔNG VỨC */}
-      <div className="px-4 md:px-8">
-        <div 
-          ref={carouselRef}
-          onScroll={checkScroll} // Lắng nghe lúc người dùng vuốt tay trên mobile
-          className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="font-bold text-yellow-600 hover:text-yellow-500 hover:bg-yellow-500/5 uppercase tracking-wider"
+          onClick={() => router.push('/maps')}
         >
-          {maps.map((map) => (
-            <div 
-              key={map.id} 
-              onClick={() => router.push(`/maps/${map.id}`)}
-              // 🎯 CSS CHIA SLOT: Mobile (1 card), Tablet (2 card), PC (Đúng 4 card)
-              className="snap-start shrink-0 cursor-pointer group/card w-[85vw] sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
-            >
-              <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-md transition-all duration-500 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 rounded-2xl h-full flex flex-col">
-                
-                <div className="relative aspect-[485/220] overflow-hidden shrink-0">
-                  <img src={map.image} alt={map.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-110" />
-                  <div className="absolute left-2 top-2"><Badge className="bg-black/70 backdrop-blur-md text-white text-[8px] font-bold uppercase border-none px-2 py-0.5">{map.displayType}</Badge></div>
-                  <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-md px-2 py-1 text-[9px] font-bold text-white border border-white/10">
-                    <Star className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />{map.favourite}
-                  </div>
-                </div>
-
-                <CardContent className="p-4 flex flex-col flex-1 justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-bold tracking-tight flex items-center gap-1.5 group-hover/card:text-yellow-500 transition-colors uppercase">
-                      {map.featured && <Flame className="h-4 w-4 text-orange-500 fill-orange-500 shrink-0" />}
-                      <span className="line-clamp-1">{map.name}</span>
-                    </h3>
-                    <div className="mt-1.5 flex items-center gap-3 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                      <span className="flex items-center gap-1"><Users className="h-3 w-3 text-yellow-500/50" />{map.displayPlayers}</span>
-                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-yellow-500/50" />{DIFFICULTY_MAP[map.difficulty] || "Trung Bình"}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
+          Xem tất cả
+        </Button>
       </div>
-    </section>
+
+      <Carousel opts={{ align: "start", loop: false }} className="w-full">
+        <CarouselContent className="-ml-4">
+          {maps.map((map, index) => (
+            <CarouselItem key={`${map.id}-${index}`} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+                onClick={() => router.push(`/maps/${map.id}`)}
+              >
+                <Card className="relative overflow-hidden border-border/50 bg-card/40 dark:bg-slate-900/40 backdrop-blur-md flex flex-col h-full transition-all duration-500 hover:border-yellow-500/50 hover:shadow-2xl rounded-3xl select-none p-0 gap-0">
+                  
+                  <div className="relative w-full shrink-0 overflow-hidden bg-slate-900" style={{ paddingBottom: '45.36%' }}>
+                    <img 
+                      src={map.image || ERROR_IMAGE} 
+                      alt={map.name} 
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-110"
+                      onError={(e) => { e.currentTarget.src = ERROR_IMAGE }}
+                    />
+                    {map.isTrending && (
+                      <div className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 backdrop-blur-md">
+                        <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+                      </div>
+                    )}
+                  </div>
+
+                  <CardContent className="p-4 pt-3 flex flex-col flex-1">
+                    <div className="flex flex-col gap-1.5">
+                      <h3 className="text-base font-bold text-foreground dark:text-white uppercase tracking-tight line-clamp-2 group-hover:text-yellow-500 transition-colors">
+                        {map.name}
+                      </h3>
+
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <Gamepad2 className="h-3.5 w-3.5 text-yellow-500/50 fill-current" />
+                          <span>{map.typeTags?.[0] || "Chế độ"}</span>
+                        </div>
+                        <span className="text-border/40 font-light">|</span>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-yellow-500/50 fill-current" />
+                          <span>{map.playerTags?.[0] || "Tự do"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto pt-4 flex items-center gap-2">
+                      <Button 
+                        onClick={(e) => handlePlayNow(e, map.shortCode)}
+                        className="flex-1 h-11 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl shadow-md active:scale-95 transition-all"
+                      >
+                        <Play className="mr-2 h-4 w-4 fill-current" /> CHƠI
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={(e) => handleCopy(e, map.shortCode, map.id)}
+                        className="h-11 w-11 shrink-0 rounded-xl border-border/50 hover:bg-yellow-500/10 dark:hover:bg-yellow-500/20 active:scale-95 transition-all"
+                      >
+                        {copiedId === map.id ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        
+        {/* 🎯 HAI NÚT MŨI TÊN ĐÃ ĐƯỢC ĐẨY RA RÌA VÀ LÀM TO LÊN */}
+        <div className="hidden md:block">
+          <CarouselPrevious className="absolute -left-6 lg:-left-12 xl:-left-16 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/80 backdrop-blur-md border-2 border-border/50 hover:border-yellow-500 hover:bg-yellow-500 hover:text-black hover:scale-110 transition-all shadow-xl z-10" />
+          <CarouselNext className="absolute -right-6 lg:-right-12 xl:-right-16 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/80 backdrop-blur-md border-2 border-border/50 hover:border-yellow-500 hover:bg-yellow-500 hover:text-black hover:scale-110 transition-all shadow-xl z-10" />
+        </div>
+      </Carousel>
+    </div>
   )
 }

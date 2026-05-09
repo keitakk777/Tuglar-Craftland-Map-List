@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, Trophy, Users, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-// 🎯 COMPONENT NHỎ CHUYÊN ĐỂ ĐẾM NGƯỢC THỜI GIAN
+// ⏳ COMPONENT ĐẾM NGƯỢC THỜI GIAN
 const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -52,24 +52,80 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
 };
 
 // 🎯 COMPONENT CHÍNH
-export function EventBanner({ events }: { events: any[] }) {
+export function EventBanner({ events = [] }: { events?: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  
+  const [progressWidth, setProgressWidth] = useState("0%");
+  const [passedNodes, setPassedNodes] = useState<boolean[]>([]);
 
-  // Nếu chưa có data thì ẩn component đi
-  if (!events || events.length === 0) return null;
-
+  if (!events || !Array.isArray(events) || events.length === 0) return null;
   const activeEvent = events[activeIndex];
+  if (!activeEvent) return null;
+
+  useEffect(() => {
+    if (!activeEvent.milestones || activeEvent.milestones.length === 0) return;
+
+    const calculateProgress = () => {
+      const current = new Date();
+      const eventYear = activeEvent.endTime 
+        ? new Date(activeEvent.endTime).getFullYear() 
+        : current.getFullYear();
+
+      const totalNodes = activeEvent.milestones.length;
+      
+      const parsed = activeEvent.milestones.map((ms: any, index: number) => {
+        const parts = ms.date.split('-');
+        const [day, month] = parts[0].split('/');
+        const startDate = new Date(eventYear, parseInt(month) - 1, parseInt(day));
+        
+        return { 
+            start: startDate.getTime(), 
+            percent: totalNodes > 1 ? (index / (totalNodes - 1)) * 100 : 100 
+        };
+      });
+
+      const currTime = current.getTime();
+      const newPassedNodes = parsed.map((p: any) => currTime >= p.start);
+      setPassedNodes(newPassedNodes);
+
+      if (currTime < parsed[0].start) {
+        setProgressWidth("0%");
+        return;
+      }
+      if (currTime >= parsed[totalNodes - 1].start) {
+        setProgressWidth("100%");
+        return;
+      }
+
+      for (let i = 0; i < totalNodes - 1; i++) {
+        if (currTime >= parsed[i].start && currTime < parsed[i+1].start) {
+          const timePassed = currTime - parsed[i].start;
+          const timeSegment = parsed[i+1].start - parsed[i].start;
+          const timeFraction = timePassed / timeSegment; 
+          
+          const percentDiff = parsed[i+1].percent - parsed[i].percent;
+          const currentPercent = parsed[i].percent + (timeFraction * percentDiff);
+          
+          setProgressWidth(`${currentPercent}%`);
+          break;
+        }
+      }
+    };
+
+    calculateProgress();
+    const timer = setInterval(calculateProgress, 60000); 
+    return () => clearInterval(timer);
+  }, [activeEvent]);
 
   return (
-    <section id="events" className="relative overflow-hidden pt-16">
+    <section id="events" className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-500/10 via-background to-background" />
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-20" />
       
-      <div className="container relative mx-auto px-4 py-16 md:py-24">
-        
+      <div className="container relative mx-auto px-4 pb-16 pt-4 md:pb-24 md:pt-8">
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-12">
           
-          {/* CỘT TRÁI: ẢNH + TIẾN ĐỘ + LIST SỰ KIỆN KHÁC */}
+          {/* CỘT TRÁI */}
           <div className="w-full max-w-2xl lg:w-1/2 flex flex-col gap-6 relative z-10">
             <AnimatePresence mode="wait">
               <motion.div
@@ -82,7 +138,7 @@ export function EventBanner({ events }: { events: any[] }) {
               >
                 <div className="absolute inset-0 bg-muted/50" />
                 <img 
-                  src={activeEvent.image} 
+                  src={activeEvent.image || "/placeholder.jpg"} 
                   alt={activeEvent.title} 
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                 />
@@ -98,49 +154,56 @@ export function EventBanner({ events }: { events: any[] }) {
               </motion.div>
             </AnimatePresence>
 
-            {/* 🎯 THANH TIẾN ĐỘ SỰ KIỆN */}
-            {activeEvent.milestones?.length > 0 && (
+            {/* 🎯 THANH TIẾN ĐỘ ĐÃ ĐƯỢC CĂN CHỈNH SÁT MÉP */}
+            {activeEvent.milestones && activeEvent.milestones.length > 0 && (
               <div className="w-full p-6 bg-muted/20 rounded-3xl border border-yellow-500/20 backdrop-blur-md">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6 text-center">
                   Lộ trình sự kiện
                 </h3>
-                <div className="relative flex justify-between items-start px-4">
-                  {/* Đường line nền (Tối) */}
-                  <div className="absolute top-4 left-6 right-6 h-1.5 bg-slate-800 rounded-full" />
+                
+                {/* Lớp bọc an toàn để tính toán chiều ngang */}
+                <div className="relative w-full">
                   
-                  {/* Đường line chạy tiến độ (Sáng) - Đang set cứng 50% làm mẫu UI */}
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "50%" }} 
-                    className="absolute top-4 left-6 h-1.5 bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full z-10 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
-                  >
-                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] w-full animate-[pulse_2s_infinite]" />
-                  </motion.div>
-
-                  {/* Render các Node */}
-                  {activeEvent.milestones.map((ms: any, idx: number) => {
-                    // Giả lập logic: mốc 0 và 1 đã qua, các mốc sau chưa tới
-                    const isPassed = idx <= 1; 
+                  {/* Đường Line Nền - Nằm chính xác giữa 2 tâm của Node */}
+                  <div className="absolute top-[13px] left-8 right-8 h-1.5">
+                    <div className="absolute inset-0 bg-slate-800 rounded-full" />
                     
-                    return (
-                      <div key={idx} className="relative z-20 flex flex-col items-center gap-2 w-16">
-                        <div className={`h-8 w-8 rounded-full border-4 flex items-center justify-center transition-all shadow-lg
-                          ${isPassed ? 'bg-yellow-500 border-yellow-200' : 'bg-slate-900 border-slate-700'}`}
-                        >
-                          {isPassed ? <CheckCircle2 className="h-4 w-4 text-black" /> : <div className="h-2 w-2 bg-slate-500 rounded-full" />}
+                    {/* Đường chạy màu vàng */}
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: progressWidth }} 
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full z-10 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
+                    >
+                       <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] w-full animate-[pulse_2s_infinite]" />
+                    </motion.div>
+                  </div>
+
+                  {/* Vị trí các Node dàn đều tuyệt đối */}
+                  <div className="relative flex justify-between items-start z-20">
+                    {activeEvent.milestones.map((ms: any, idx: number) => {
+                      const isPassed = passedNodes[idx] || false; 
+                      return (
+                        <div key={idx} className="flex flex-col items-center gap-2 w-16">
+                          <div className={`h-8 w-8 rounded-full border-4 flex items-center justify-center transition-all shadow-lg duration-500
+                            ${isPassed ? 'bg-yellow-500 border-yellow-200 scale-110' : 'bg-slate-900 border-slate-700'}`}
+                          >
+                            {isPassed ? <CheckCircle2 className="h-4 w-4 text-black" /> : <div className="h-2 w-2 bg-slate-500 rounded-full" />}
+                          </div>
+                          <div className="text-center space-y-1">
+                            <p className="text-[10px] font-black text-foreground leading-none">{ms.date}</p>
+                            <p className={`text-[9px] font-bold uppercase transition-colors ${isPassed ? 'text-yellow-500' : 'text-muted-foreground'}`}>{ms.label}</p>
+                          </div>
                         </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[10px] font-black text-foreground leading-none">{ms.date}</p>
-                          <p className={`text-[9px] font-bold uppercase ${isPassed ? 'text-yellow-500' : 'text-muted-foreground'}`}>{ms.label}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+
                 </div>
               </div>
             )}
 
-            {/* BOX CHỌN SỰ KIỆN KHÁC */}
+            {/* CHỌN SỰ KIỆN KHÁC */}
             <div className="w-full">
               <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 Các sự kiện khác
@@ -151,7 +214,7 @@ export function EventBanner({ events }: { events: any[] }) {
                   const isActive = activeIndex === index;
                   return (
                     <div 
-                      key={event.id}
+                      key={event.id || index}
                       onClick={() => setActiveIndex(index)}
                       className={`relative aspect-[16/9] cursor-pointer overflow-hidden rounded-xl transition-all duration-300 group
                         ${isActive 
@@ -162,14 +225,14 @@ export function EventBanner({ events }: { events: any[] }) {
                     >
                       <div className="absolute inset-0 bg-muted/50" />
                       <img 
-                        src={event.image} 
+                        src={event.image || "/placeholder.jpg"} 
                         alt={event.title} 
                         className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`} 
                       />
                       <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? 'bg-black/10' : 'bg-black/40 group-hover:bg-black/20'}`} />
                       <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                         <p className={`text-[10px] font-bold line-clamp-2 transition-colors ${isActive ? 'text-yellow-400' : 'text-white'}`}>
-                          {event.title.replace('\n', ' ')}
+                          {event.title?.replace('\n', ' ')}
                         </p>
                       </div>
                     </div>
@@ -182,7 +245,7 @@ export function EventBanner({ events }: { events: any[] }) {
             <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl -z-10" />
           </div>
           
-          {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
+          {/* CỘT PHẢI */}
           <div className="flex w-full flex-col gap-6 lg:w-1/2 flex-1 relative z-10">
             <AnimatePresence mode="wait">
               <motion.div
@@ -195,7 +258,7 @@ export function EventBanner({ events }: { events: any[] }) {
               >
                 <div>
                   <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
-                    {activeEvent.tag}
+                    {activeEvent.tag || "Sự kiện"}
                   </Badge>
                   <h1 className="whitespace-pre-line text-balance text-3xl font-bold leading-[1.25] md:text-4xl lg:text-5xl uppercase">
                     {activeEvent.title}
@@ -210,17 +273,17 @@ export function EventBanner({ events }: { events: any[] }) {
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Trophy className="mb-1.5 h-4 w-4 text-yellow-500" />
                     <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
-                      {activeEvent.prize}
+                      {activeEvent.prize || "0"}
                     </p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {activeEvent.prizeUnit || "Kim cương"}
+                      {activeEvent.prizeUnit || "Giải thưởng"}
                     </p>
                   </div>
                   
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Users className="mb-1.5 h-4 w-4 text-yellow-500" />
                     <p className="whitespace-nowrap text-[clamp(1rem,4vw,1.5rem)] font-bold text-foreground leading-none">
-                      {activeEvent.participants}
+                      {activeEvent.participants || "0"}
                     </p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tham gia</p>
                   </div>
@@ -228,12 +291,12 @@ export function EventBanner({ events }: { events: any[] }) {
                   <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                     <Calendar className="mb-1.5 h-4 w-4 text-yellow-500 shrink-0" />
                     <p className="whitespace-nowrap text-[clamp(0.8rem,3vw,1.1rem)] font-bold text-foreground leading-none tracking-tighter">
-                      {activeEvent.date}
+                      {activeEvent.date || "Đang cập nhật"}
                     </p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Thời gian</p>
                   </div>
 
-                  {activeEvent.status !== "Đã kết thúc" && (
+                  {activeEvent.status !== "Đã kết thúc" && activeEvent.endTime && (
                     <div className="flex flex-col justify-center rounded-2xl border border-yellow-500/20 bg-muted/20 p-3 hover:border-yellow-500/50 transition-colors overflow-hidden">
                       <Clock className="mb-1.5 h-4 w-4 text-yellow-500" />
                       <div className="leading-none">
@@ -245,9 +308,9 @@ export function EventBanner({ events }: { events: any[] }) {
                 </div>
                 
                 <div className="flex flex-wrap gap-3 mt-2">
-                  <a href={activeEvent.actionLink} target="_blank" rel="noopener noreferrer">
+                  <a href={activeEvent.actionLink || "#"} target="_blank" rel="noopener noreferrer">
                     <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold uppercase tracking-wider rounded-xl h-12 px-8 shadow-md shadow-yellow-500/20">
-                      {activeEvent.actionText || "Tham gia ngay"}
+                      {activeEvent.actionText || "Xem thêm"}
                     </Button>
                   </a>
                 </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Search, Copy, Check, Cpu, User2, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, Copy, Check, User2, Filter, ChevronDown, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -75,7 +75,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
   return (
     <div className="space-y-8 pb-20 md:pb-0">
       
-      {/* 🎯 THANH TÌM KIẾM (Đã fix lỗi căn lề tàng hình & khôi phục Sticky cho Mobile) */}
       <div className="sticky top-4 md:top-20 z-30 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl transition-all">
         
         <div className="flex items-center gap-4">
@@ -89,7 +88,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
             />
           </div>
           
-          {/* Nút Lọc này CHỈ HIỆN TRÊN PC */}
           <Button 
             variant="outline" 
             onClick={() => setShowAdvanced(!showAdvanced)}
@@ -101,7 +99,7 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </Button>
         </div>
 
-        {/* 🎯 BỘ LỌC CHỈ HIỆN TRÊN PC (Gom chung 1 cục để chống lỗi đùn padding trên Mobile) */}
+        {/* 🎯 BỘ LỌC PC (Đã xóa ảnh lỗi, gộp gọn lại) */}
         <div className="hidden md:block">
           <div className="flex gap-2 overflow-x-auto pb-2 mt-4 [&::-webkit-scrollbar]:hidden">
             {allTypes.map(type => (
@@ -155,20 +153,32 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
               <div className="relative aspect-square overflow-hidden bg-muted/30">
                 <img src={asset.image} alt={asset.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 
-                <div className="absolute top-2 left-2 drop-shadow-md">
-                   <img src="/icon/icon short tuglar.png" alt="Tuglar" className="h-6 w-6 object-contain" />
+                <div className="absolute top-2 left-2 z-10">
+                   <img src="/icon/icon short tuglar.png" alt="Tuglar" className="h-6 w-6 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]" />
                 </div>
 
-                <div className="absolute top-2 right-2 flex flex-col gap-1">
-                  <div className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black text-white uppercase tracking-tighter">
+                <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                  <div className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black text-white uppercase tracking-tighter shadow-md">
                     {asset.theme}
                   </div>
                 </div>
 
                 {asset.capacity && (
-                  <div className="absolute bottom-2 left-2 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
-                    <Cpu className="h-3 w-3 text-yellow-500" />
-                    <span className="text-[10px] font-black text-white">{asset.capacity}</span>
+                  <div className="absolute bottom-2 left-2 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 flex items-center gap-1.5 drop-shadow-md z-10">
+                    <div 
+                      className="w-3 h-3 bg-white" 
+                      style={{
+                        maskImage: 'url(/icon/capacity.svg)',
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                        WebkitMaskImage: 'url(/icon/capacity.svg)', 
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center'
+                      }}
+                    />
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">{asset.capacity}</span>
                   </div>
                 )}
               </div>
@@ -191,7 +201,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
         </AnimatePresence>
       </div>
 
-      {/* 🎯 TAB BỘ LỌC POPUP CHO MOBILE */}
       <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
         <SheetTrigger asChild>
           <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-[0_10px_40px_rgba(234,179,8,0.3)] md:hidden z-50 bg-yellow-500 hover:bg-yellow-600 text-black border border-yellow-400">
@@ -202,6 +211,7 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </Button>
         </SheetTrigger>
         
+        {/* 🎯 BỘ LỌC MOBILE (Đã xóa ảnh lỗi, khôi phục dấu chấm tròn) */}
         <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] flex flex-col p-6 bg-background/95 backdrop-blur-xl border-t border-border z-[60]">
           <SheetHeader className="pb-4 border-b border-border">
             <SheetTitle className="text-left font-black uppercase tracking-widest text-foreground">Bộ lọc phân loại</SheetTitle>

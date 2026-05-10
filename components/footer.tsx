@@ -1,67 +1,31 @@
 "use client"
 import Link from "next/link"
-import { Gamepad2, PlayCircle, Trophy, History } from "lucide-react"
+import { Gamepad2 } from "lucide-react"
 import { SiYoutube, SiTiktok, SiFacebook, SiInstagram } from "react-icons/si"
 
 export function Footer() {
   return (
     <footer className="border-t border-border/50 bg-card/50 backdrop-blur-md">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        {/* Đã chuyển sang bố cục flex chia 2 bên cho cân đối */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-12">
           
           {/* 1. BRAND & INTRO */}
-          <div className="lg:col-span-1">
+          <div className="max-w-sm">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500 shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform">
                 <Gamepad2 className="h-6 w-6 text-black" />
               </div>
               <span className="text-xl font-bold tracking-tighter uppercase">Tuglar Craftland</span>
             </Link>
-            {/* 🎯 Thêm class whitespace-pre-line vào đây */}
-            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+            <p className="mt-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
               Một đội ngũ Creator Craftland (nghiệp dư) tại Việt Nam!
-              <br /> {/* 🎯 Thêm thẻ này vào đây */}
+              <br />
               Theo dõi chúng tôi để cập nhật tin tức, bản đồ độc đáo từ thế giới Craftland!
             </p>
           </div>
 
-          {/* 2. KHÁM PHÁ */}
-          <div>
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-foreground">Khám phá</h4>
-            <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="/maps" className="flex items-center gap-2 hover:text-yellow-500 transition-colors">
-                  <PlayCircle className="h-4 w-4" /> Danh sách Map
-                </Link>
-              </li>
-              <li>
-                <Link href="/events" className="flex items-center gap-2 hover:text-yellow-500 transition-colors">
-                  <Trophy className="h-4 w-4" /> Sự kiện Tuglar
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="flex items-center gap-2 hover:text-yellow-500 transition-colors">
-                  <History className="h-4 w-4" /> Nhật ký cập nhật
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* 3. CREATORS (ĐÃ CẬP NHẬT THEO YÊU CẦU) */}
-          <div>
-            <h4 className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-foreground">Đội ngũ sáng tạo</h4>
-            <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Huỳnh Nguyễn (BlueGhast)</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Huy Lê (Enderblue)</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoàng Long (Long Sensei)</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoài Ân</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Hoàng Hiệp</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Bảo My</li>
-              <li className="hover:text-yellow-600 transition-colors cursor-default font-medium">Ninh Nguyễn</li>
-            </ul>
-          </div>
-
-          {/* 4. FOLLOW US */}
+          {/* 2. FOLLOW US */}
           <div>
             <h4 className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-foreground">Theo dõi Tuglar</h4>
             <p className="text-xs text-muted-foreground mb-6 leading-relaxed">Cập nhật những thông tin mới nhất từ chúng mình qua các nền tảng:</p>
@@ -79,7 +43,7 @@ export function Footer() {
                 href="https://www.tiktok.com/@tuglar.craftland" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="h-11 w-11 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground hover:bg-black hover:text-white transition-all duration-300 border border-transparent hover:border-white/10"
+                className="h-11 w-11 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground hover:bg-black hover:text-white transition-all duration-300 border border-transparent hover:border-white/10 dark:hover:bg-white dark:hover:text-black"
               >
                 <SiTiktok className="h-5 w-5" />
               </a>

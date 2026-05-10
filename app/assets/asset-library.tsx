@@ -76,7 +76,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
     <div className="space-y-8 pb-20 md:pb-0">
       
       <div className="sticky top-4 md:top-20 z-30 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl transition-all">
-        
         <div className="flex items-center gap-4">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -99,7 +98,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </Button>
         </div>
 
-        {/* 🎯 BỘ LỌC PC (Đã xóa ảnh lỗi, gộp gọn lại) */}
         <div className="hidden md:block">
           <div className="flex gap-2 overflow-x-auto pb-2 mt-4 [&::-webkit-scrollbar]:hidden">
             {allTypes.map(type => (
@@ -145,7 +143,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
         </div>
       </div>
 
-      {/* Asset Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         <AnimatePresence mode="popLayout">
           {filteredAssets.map((asset) => (
@@ -153,9 +150,12 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
               <div className="relative aspect-square overflow-hidden bg-muted/30">
                 <img src={asset.image} alt={asset.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 
-                <div className="absolute top-2 left-2 z-10">
-                   <img src="/icon/icon short tuglar.png" alt="Tuglar" className="h-6 w-6 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]" />
-                </div>
+                {/* 🎯 ĐÃ CẬP NHẬT LOGO THEO TEAM: Chỉ hiện nếu team là Tuglar Craftland */}
+                {asset.team === "Tuglar Craftland" && (
+                  <div className="absolute top-2 left-2 z-10">
+                     <img src="/icon/icon short tuglar.png" alt="Tuglar" className="h-6 w-6 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]" />
+                  </div>
+                )}
 
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                   <div className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black text-white uppercase tracking-tighter shadow-md">
@@ -211,7 +211,6 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </Button>
         </SheetTrigger>
         
-        {/* 🎯 BỘ LỌC MOBILE (Đã xóa ảnh lỗi, khôi phục dấu chấm tròn) */}
         <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] flex flex-col p-6 bg-background/95 backdrop-blur-xl border-t border-border z-[60]">
           <SheetHeader className="pb-4 border-b border-border">
             <SheetTitle className="text-left font-black uppercase tracking-widest text-foreground">Bộ lọc phân loại</SheetTitle>
@@ -250,7 +249,7 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
                       key={theme}
                       variant={tempTheme === theme ? "default" : "outline"}
                       onClick={() => setTempTheme(theme)}
-                      className={`rounded-full px-4 h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
+                      className={`rounded-full px-4 h-8 font-bold text-[9px] uppercase tracking-wider transition-all ${
                         tempTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20' : 'border-border bg-background'
                       }`}
                     >

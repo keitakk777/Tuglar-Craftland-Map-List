@@ -2,7 +2,7 @@
 const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH%3C/text%3E%3C/svg%3E";
 
 // ==========================================
-// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (ĐÃ FIX LỖI TÀNG HÌNH ẢNH)
+// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (BẢN NỒI ĐỒNG CỐI ĐÁ)
 // ==========================================
 export function getDirectImageUrl(rawUrl: string) {
   if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
@@ -15,8 +15,8 @@ export function getDirectImageUrl(rawUrl: string) {
   const match = rawUrl.match(driveRegex);
   
   if (match && match[1]) {
-    // 🎯 ĐÃ FIX: Dùng dấu $ chuẩn chỉ và dùng server lh3 của Google
-    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    // 🎯 ĐÃ FIX: Dùng phép cộng chuỗi (+) để nối link lh3 xịn nhất của Google, đảm bảo không bao giờ trượt ID
+    return "https://lh3.googleusercontent.com/d/" + match[1];
   }
 
   return rawUrl;
@@ -54,6 +54,7 @@ export async function getMapsData() {
     const idxPatch = getIdx(["patch note", "patch"]); 
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
     const idxPreview = getIdx(["preview", "video", "clip"]);
+    const idxLinkMap = getIdx(["link map", "link"]); 
 
     const maps = [];
     const seenIds = new Set();
@@ -64,19 +65,48 @@ export async function getMapsData() {
 
       let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
       let rawCode = idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "";
+      let rawLink = idxLinkMap >= 0 && row[idxLinkMap] ? String(row[idxLinkMap]).trim() : "";
       
       const rowString = row.join(" ");
       if (rowString.includes("Exception: Service invoked") || rowString.includes("#ERROR!") || rawName.includes("Exception")) continue; 
 
-      let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
-      let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
+      let mapCode = rawCode.replace(/[\r\n\s]+/g, "").trim();
+
+      // Bộ não AI quét mã map từ link
+      if (!mapCode && rawLink.includes("m=")) {
+        const match = rawLink.match(/m=([A-Za-z0-9_]+)/);
+        if (match && match[1]) {
+           let fullHash = match[1];
+           let coreCode = fullHash.startsWith("1E") && fullHash.length > 5 ? fullHash.slice(5) : fullHash;
+           
+           if (coreCode.length > 10) {
+              mapCode = "#FREEFIRE" + coreCode;
+           } else {
+              mapCode = "#" + coreCode;
+           }
+        }
+      }
+
+      let mapId = mapCode.replace(/#FREEFIRE/i, "").replace(/#/g, "").trim(); 
+      
+      if (mapId.startsWith("1E") && mapId.length > 5) {
+          mapId = mapId.slice(5);
+          mapCode = mapId.length > 10 ? "#FREEFIRE" + mapId : "#" + mapId;
+      }
+      
+      if (mapCode && !mapCode.startsWith("#")) {
+          if (mapCode.length > 10 && !mapCode.toUpperCase().startsWith("FREEFIRE")) {
+              mapCode = "#FREEFIRE" + mapCode;
+          } else if (mapCode.length > 10 && mapCode.toUpperCase().startsWith("FREEFIRE")) {
+              mapCode = "#" + mapCode;
+          } else {
+              mapCode = "#" + mapCode;
+          }
+      }
 
       const mapName = rawName.replace(/\[([0-9a-fA-F]{6}|b|c|i|s|u|sub|sup)\]/gi, "").replace(/[\r\n\t]+/g, " ").trim();
-      const mapCode = rawCode.replace(/[\r\n\s]+/g, "").trim();
-
       if (!mapName || mapName.toLowerCase().includes("đang tải")) continue;
 
-      let mapId = mapCode.replace("#", "").trim();
       if (!mapId) mapId = `map-${i}`;
       if (seenIds.has(mapId)) mapId = `${mapId}-row-${i}`;
       seenIds.add(mapId);
@@ -89,6 +119,8 @@ export async function getMapsData() {
         if (parts.length >= 3) timeScore = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0])).getTime();
       }
 
+      let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
+      let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
       const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
       const playerTagsList = rawTeamMode.split(",").map(s => s.trim()).filter(Boolean);
 
@@ -104,7 +136,9 @@ export async function getMapsData() {
         typeTags: typeTagsList.length > 0 ? typeTagsList : ["Chế độ"],
         displayPlayers: rawTeamMode,
         playerTags: playerTagsList.length > 0 ? playerTagsList : ["Tự do"],
-        shortCode: mapCode,
+        shortCode: mapCode, 
+        link: rawLink,      
+        playLink: rawLink, 
         image: mapImage,
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         patchNotes: idxPatch >= 0 ? parsePatchNotes(String(row[idxPatch])) : [],
@@ -113,7 +147,7 @@ export async function getMapsData() {
         sortTime: timeScore 
       });
     }
-    maps.sort((a, b) => b.sortTime - a.sortTime); // Mới nhất lên đầu
+    maps.sort((a, b) => b.sortTime - a.sortTime); 
     return maps;
   } catch (error) { return []; }
 }
@@ -176,56 +210,72 @@ export async function getEventsData() {
 }
 
 // ==========================================
-// 4. HÀM HÚT DATA KHO ASSET 
-// Trong file app/maps/fetch-data.ts, tìm hàm getAssetsData và cập nhật:
-
+// 4. HÀM HÚT DATA KHO ASSET
+// ==========================================
 export async function getAssetsData() {
   const ASSET_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1608901754&single=true&output=csv";
 
   try {
     const res = await fetch(ASSET_SHEET_URL, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    
     const csvText = await res.text();
     const rows = parseCSV(csvText); 
     if (rows.length < 2) return [];
 
-    let headerIdx = rows.findIndex(r => r.join("").toLowerCase().includes("asset name") || r.join("").toLowerCase().includes("type"));
-    if (headerIdx === -1) headerIdx = 1;
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      const rowStr = rows[i].join("").toLowerCase();
+      if (rowStr.includes("asset name") || rowStr.includes("asset code") || rowStr.includes("type")) {
+        headerIdx = i; break;
+      }
+    }
+    if (headerIdx === -1) return [];
 
-    const headers = rows[headerIdx].map(h => h.toLowerCase().trim());
-    const getIdx = (ks: string[]) => {
-      for (const k of ks) { const f = headers.findIndex(h => h === k); if (f !== -1) return f; }
-      for (const k of ks) { const f = headers.findIndex(h => h.includes(k)); if (f !== -1) return f; }
+    const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
+    const getIdx = (keys: string[]) => {
+      for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
+      for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
       return -1;
     };
 
-    const idxName = getIdx(["asset name"]), 
-          idxCreator = getIdx(["creator"]), 
-          idxPreview = getIdx(["preview link", "preview"]), 
-          idxDesc = getIdx(["description"]),
-          idxCap = getIdx(["capacity"]), 
-          idxType = getIdx(["type"]), 
-          idxTheme = getIdx(["theme"]), 
-          idxCode = getIdx(["asset code"]),
-          // 🎯 BỔ SUNG: Dò cột Team (Cột C trên sheet của ní)
-          idxTeam = getIdx(["team", "đội", "nhóm"]);
+    const idxId = getIdx(["id"]);
+    const idxName = getIdx(["asset name", "tên"]);
+    const idxCreator = getIdx(["creator", "người tạo"]);
+    const idxPreview = getIdx(["preview link", "preview", "link"]);
+    const idxDesc = getIdx(["description", "mô tả"]);
+    const idxCapacity = getIdx(["capacity", "tải trọng", "dung lượng"]);
+    const idxType = getIdx(["type", "loại asset", "loại"]);
+    const idxTheme = getIdx(["theme", "chủ đề"]);
+    const idxCode = getIdx(["asset code", "mã"]);
+    const idxTeam = getIdx(["team", "đội", "nhóm"]);
 
-    return rows.slice(headerIdx + 1).map((row, i) => {
-      if (!row || !row[idxName]) return null;
+    return rows.slice(headerIdx + 1).map((row, index) => {
+      if (!row || row.length < 3) return null;
+
+      let rawName = idxName >= 0 && row[idxName] ? String(row[idxName]) : "";
+      if (!rawName) return null; 
+
+      let rawPreview = idxPreview >= 0 && row[idxPreview] ? String(row[idxPreview]) : "";
+
       return {
-        id: row[0] || `asset-${i}`,
-        creator: row[idxCreator] || "Ẩn danh",
-        image: getDirectImageUrl(row[idxPreview]),
-        name: row[idxName],
-        description: row[idxDesc] || "",
-        capacity: row[idxCap] || "",
-        type: row[idxType] || "Khác",
-        theme: row[idxTheme] || "Tự do",
-        shortCode: row[idxCode] || "",
-        // 🎯 LẤY DỮ LIỆU TEAM:
+        id: idxId >= 0 && row[idxId] ? String(row[idxId]) : `asset-${index}`,
+        creator: idxCreator >= 0 && row[idxCreator] ? String(row[idxCreator]) : "Ẩn danh",
+        image: getDirectImageUrl(rawPreview), 
+        name: rawName,
+        description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
+        capacity: idxCapacity >= 0 && row[idxCapacity] ? String(row[idxCapacity]) : "",
+        type: idxType >= 0 && row[idxType] ? String(row[idxType]) : "Khác",
+        theme: idxTheme >= 0 && row[idxTheme] ? String(row[idxTheme]) : "Tự do",
+        shortCode: idxCode >= 0 && row[idxCode] ? String(row[idxCode]) : "",
         team: idxTeam >= 0 ? String(row[idxTeam]).trim() : ""
       };
-    }).filter(Boolean);
-  } catch (e) { return []; }
+    }).filter(Boolean); 
+
+  } catch (e) {
+    console.error("Lỗi fetch Kho Asset", e);
+    return [];
+  }
 }
 
 // ==========================================

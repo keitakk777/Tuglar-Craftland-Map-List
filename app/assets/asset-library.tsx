@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Search, Copy, Check, User2, Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, Copy, Check, User2, Filter, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 
@@ -14,21 +13,34 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
   
   const [selectedType, setSelectedType] = useState("Tất cả")
   const [selectedTheme, setSelectedTheme] = useState("Tất cả")
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false)
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [tempType, setTempType] = useState("Tất cả")
   const [tempTheme, setTempTheme] = useState("Tất cả")
 
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
   const allTypes = useMemo(() => {
     const types = new Set(["Tất cả"])
-    initialAssets?.forEach(asset => asset.type && types.add(asset.type))
+    initialAssets?.forEach(asset => {
+      if (asset.type) {
+        asset.type.split(',').forEach((t: string) => {
+          if (t.trim()) types.add(t.trim())
+        })
+      }
+    })
     return Array.from(types)
   }, [initialAssets])
 
   const allThemes = useMemo(() => {
     const themes = new Set(["Tất cả"])
-    initialAssets?.forEach(asset => asset.theme && themes.add(asset.theme))
+    initialAssets?.forEach(asset => {
+      if (asset.theme) {
+        asset.theme.split(',').forEach((t: string) => {
+          if (t.trim()) themes.add(t.trim())
+        })
+      }
+    })
     return Array.from(themes)
   }, [initialAssets])
 
@@ -40,27 +52,41 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
         asset?.shortCode?.toLowerCase().includes(searchLower) ||
         asset?.description?.toLowerCase().includes(searchLower)
       
-      const matchesType = selectedType === "Tất cả" || asset.type === selectedType
-      const matchesTheme = selectedTheme === "Tất cả" || asset.theme === selectedTheme
+      const matchesType = selectedType === "Tất cả" || (asset.type && asset.type.split(',').map((t: string) => t.trim()).includes(selectedType))
+      const matchesTheme = selectedTheme === "Tất cả" || (asset.theme && asset.theme.split(',').map((t: string) => t.trim()).includes(selectedTheme))
       
       return matchesSearch && matchesType && matchesTheme
     })
   }, [search, selectedType, selectedTheme, initialAssets])
 
   useEffect(() => {
-    if (isMobileSheetOpen) {
+    if (isFilterSheetOpen) {
       setTempType(selectedType)
       setTempTheme(selectedTheme)
     }
-  }, [isMobileSheetOpen, selectedType, selectedTheme])
+  }, [isFilterSheetOpen, selectedType, selectedTheme])
 
-  const handleApplyMobile = () => {
-    setSelectedType(tempType)
-    setSelectedTheme(tempTheme)
-    setIsMobileSheetOpen(false)
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const handleResetMobile = () => {
+  const handleApply = () => {
+    setSelectedType(tempType)
+    setSelectedTheme(tempTheme)
+    setIsFilterSheetOpen(false)
+    setTimeout(() => scrollToTop(), 200)
+  }
+
+  const handleReset = () => {
     setTempType("Tất cả")
     setTempTheme("Tất cả")
   }
@@ -73,76 +99,25 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
   const isFilterActive = selectedType !== "Tất cả" || selectedTheme !== "Tất cả"
 
   return (
-    <div className="space-y-8 pb-20 md:pb-0">
+    <div className="space-y-8 pb-20 relative">
       
-      <div className="sticky top-4 md:top-20 z-30 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl transition-all">
-        <div className="flex items-center gap-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Tìm tên, mã code hoặc nội dung mô tả..." 
-              className="pl-10 h-12 bg-muted/50 border-border rounded-xl focus:ring-yellow-500 text-sm w-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          
-          <Button 
-            variant="outline" 
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`hidden md:flex h-12 rounded-xl gap-2 font-bold uppercase text-[10px] tracking-widest transition-colors shrink-0 ${showAdvanced ? 'bg-yellow-500 text-black border-transparent hover:bg-yellow-600' : 'border-border hover:border-yellow-500/50'}`}
-          >
-            <Filter size={14} />
-            Lọc chi tiết
-            {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </Button>
-        </div>
-
-        <div className="hidden md:block">
-          <div className="flex gap-2 overflow-x-auto pb-2 mt-4 [&::-webkit-scrollbar]:hidden">
-            {allTypes.map(type => (
-              <Button
-                key={type}
-                variant={selectedType === type ? "default" : "outline"}
-                onClick={() => setSelectedType(type)}
-                className={`rounded-full px-5 whitespace-nowrap h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
-                  selectedType === type ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background hover:border-yellow-500/50 text-foreground'
-                }`}
-              >
-                {type}
-              </Button>
-            ))}
-          </div>
-
-          <AnimatePresence>
-            {showAdvanced && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }} 
-                animate={{ height: "auto", opacity: 1 }} 
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden pt-4 border-t border-border mt-2"
-              >
-                <p className="text-[10px] font-black uppercase text-muted-foreground mb-3 tracking-widest">Lọc theo chủ đề:</p>
-                <div className="flex flex-wrap gap-2">
-                  {allThemes.map(theme => (
-                    <Button
-                      key={theme}
-                      variant={selectedTheme === theme ? "default" : "outline"}
-                      onClick={() => setSelectedTheme(theme)}
-                      className={`rounded-full px-4 h-8 font-bold text-[9px] uppercase tracking-wider transition-all ${
-                        selectedTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20 hover:bg-yellow-600' : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-yellow-500/50'
-                      }`}
-                    >
-                      {theme}
-                    </Button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      {/* 🎯 ĐÃ XÓA STICKY Lẫn TOP: Thanh tìm kiếm giờ là phần tử bình thường, cuộn là trôi đi theo trang */}
+      <div className="relative z-10 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl md:max-w-4xl md:mx-auto">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Tìm tên, mã code hoặc nội dung mô tả..." 
+            className="pl-10 h-12 bg-muted/50 border-border rounded-xl focus:ring-yellow-500 text-sm w-full shadow-inner"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              scrollToTop()
+            }}
+          />
         </div>
       </div>
 
+      {/* Asset Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         <AnimatePresence mode="popLayout">
           {filteredAssets.map((asset) => (
@@ -150,18 +125,19 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
               <div className="relative aspect-square overflow-hidden bg-muted/30">
                 <img src={asset.image} alt={asset.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 
-                {/* 🎯 ĐÃ CẬP NHẬT LOGO THEO TEAM: Chỉ hiện nếu team là Tuglar Craftland */}
                 {asset.team === "Tuglar Craftland" && (
                   <div className="absolute top-2 left-2 z-10">
                      <img src="/icon/icon short tuglar.png" alt="Tuglar" className="h-6 w-6 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]" />
                   </div>
                 )}
 
-                <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                  <div className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black text-white uppercase tracking-tighter shadow-md">
-                    {asset.theme}
+                {asset.theme && (
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                    <div className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-black text-white uppercase tracking-tighter shadow-md">
+                      {asset.theme.split(',')[0].trim()}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {asset.capacity && (
                   <div className="absolute bottom-2 left-2 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 flex items-center gap-1.5 drop-shadow-md z-10">
@@ -201,17 +177,42 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
         </AnimatePresence>
       </div>
 
-      <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
-        <SheetTrigger asChild>
-          <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-[0_10px_40px_rgba(234,179,8,0.3)] md:hidden z-50 bg-yellow-500 hover:bg-yellow-600 text-black border border-yellow-400">
-            <Filter size={24} />
-            {isFilterActive && (
-              <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
-            )}
-          </Button>
-        </SheetTrigger>
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         
-        <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] flex flex-col p-6 bg-background/95 backdrop-blur-xl border-t border-border z-[60]">
+        <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-center gap-3">
+          
+          <AnimatePresence>
+            {showScrollTop && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Button 
+                  onClick={scrollToTop}
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 md:h-12 md:w-12 rounded-full bg-background/80 backdrop-blur-md shadow-lg border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-transform hover:scale-110"
+                >
+                  <ChevronUp size={20} className="md:w-6 md:h-6" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <SheetTrigger asChild>
+            <Button className="h-14 w-14 md:h-16 md:w-16 rounded-full shadow-[0_10px_40px_rgba(234,179,8,0.4)] bg-yellow-500 hover:bg-yellow-600 text-black border border-yellow-400 hover:scale-110 transition-transform">
+              <Filter size={24} className="md:w-7 md:h-7" />
+              {isFilterActive && (
+                <span className="absolute top-0 right-0 w-3.5 h-3.5 md:w-4 md:h-4 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+              )}
+            </Button>
+          </SheetTrigger>
+
+        </div>
+        
+        <SheetContent side="bottom" className="rounded-t-3xl h-[85vh] md:h-[65vh] md:max-w-2xl md:mx-auto flex flex-col p-6 bg-background/95 backdrop-blur-xl border-t md:border-x border-border z-[60]">
           <SheetHeader className="pb-4 border-b border-border">
             <SheetTitle className="text-left font-black uppercase tracking-widest text-foreground">Bộ lọc phân loại</SheetTitle>
           </SheetHeader>
@@ -249,7 +250,7 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
                       key={theme}
                       variant={tempTheme === theme ? "default" : "outline"}
                       onClick={() => setTempTheme(theme)}
-                      className={`rounded-full px-4 h-8 font-bold text-[9px] uppercase tracking-wider transition-all ${
+                      className={`rounded-full px-4 h-9 font-bold uppercase text-[9px] tracking-widest transition-all ${
                         tempTheme === theme ? 'bg-yellow-500 text-black border-none shadow-md shadow-yellow-500/20' : 'border-border bg-background'
                       }`}
                     >
@@ -261,10 +262,10 @@ export default function AssetLibrary({ initialAssets = [] }: { initialAssets?: a
           </div>
 
           <SheetFooter className="flex flex-row gap-3 pt-4 border-t border-border mt-auto">
-            <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold uppercase text-[10px] tracking-widest border-border" onClick={handleResetMobile}>
+            <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold uppercase text-[10px] tracking-widest border-border" onClick={handleReset}>
               Reset bộ lọc
             </Button>
-            <Button className="flex-1 rounded-xl h-12 bg-yellow-500 text-black hover:bg-yellow-600 font-bold uppercase text-[10px] tracking-widest" onClick={handleApplyMobile}>
+            <Button className="flex-1 rounded-xl h-12 bg-yellow-500 text-black hover:bg-yellow-600 font-bold uppercase text-[10px] tracking-widest" onClick={handleApply}>
               Áp dụng
             </Button>
           </SheetFooter>

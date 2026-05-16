@@ -23,7 +23,7 @@ export function getDirectImageUrl(rawUrl: string) {
 }
 
 // ==========================================
-// 2. HÀM HÚT DATA MAP
+// 2. HÀM HÚT DATA MAP (ĐÃ FIX: HÚT ĐÚNG CỘT TEAM)
 // ==========================================
 export async function getMapsData() {
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
@@ -55,6 +55,8 @@ export async function getMapsData() {
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
     const idxPreview = getIdx(["preview", "video", "clip"]);
     const idxLinkMap = getIdx(["link map", "link"]); 
+    // 🎯 ĐÃ FIX: Thêm lệnh dò tìm vị trí cột Team
+    const idxTeam = getIdx(["team", "đội", "nhóm"]);
 
     const maps = [];
     const seenIds = new Set();
@@ -72,7 +74,6 @@ export async function getMapsData() {
 
       let mapCode = rawCode.replace(/[\r\n\s]+/g, "").trim();
 
-      // Bộ não AI quét mã map từ link
       if (!mapCode && rawLink.includes("m=")) {
         const match = rawLink.match(/m=([A-Za-z0-9_]+)/);
         if (match && match[1]) {
@@ -121,6 +122,9 @@ export async function getMapsData() {
 
       let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
       let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
+      // 🎯 ĐÃ FIX: Lấy dữ liệu Team từ Sheet thay vì gõ cứng
+      let rawTeam = idxTeam >= 0 && row[idxTeam] ? String(row[idxTeam]).trim() : "Tự do";
+
       const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
       const playerTagsList = rawTeamMode.split(",").map(s => s.trim()).filter(Boolean);
 
@@ -131,7 +135,7 @@ export async function getMapsData() {
         id: mapId, 
         name: mapName, 
         creator: idxCreator >= 0 && row[idxCreator] ? String(row[idxCreator]) : "Ẩn danh",
-        team: "Tuglar Craftland", 
+        team: rawTeam, // 🎯 ĐÃ FIX: Hút biến Team vào đây
         displayType: rawGameMode,
         typeTags: typeTagsList.length > 0 ? typeTagsList : ["Chế độ"],
         displayPlayers: rawTeamMode,

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-// 🎯 ĐÃ FIX: Thêm dòng import Input bị thiếu ở đây
 import { Input } from "@/components/ui/input" 
 import { Users, Play, Copy, Check, Flame, Search, Filter, ChevronUp, Loader2, Shield, Gamepad2 } from "lucide-react" 
 import { motion, AnimatePresence } from "framer-motion"
@@ -65,11 +64,11 @@ function MapsContent() {
 
   const uniqueTypes = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags : []))).sort()];
   const uniquePlayers = ["Tất cả", ...Array.from(new Set(allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags : []))).sort((a,b) => a.localeCompare(b, 'vi', {numeric: true}))];
-  const uniqueTeams = ["Tất cả", ...Array.from(new Set(allMaps.map(m => m?.team).filter(t => typeof t === 'string'))).sort()];
+  const uniqueTeams = ["Tất cả", ...Array.from(new Set(allMaps.map(m => m?.team).filter(t => typeof t === 'string' && t.trim() !== ''))).sort()];
   
   const typeCounts = allMaps.flatMap(m => Array.isArray(m?.typeTags) ? m.typeTags : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
   const playerCounts = allMaps.flatMap(m => Array.isArray(m?.playerTags) ? m.playerTags : []).reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
-  const teamCounts = allMaps.map(m => m?.team).filter(t => typeof t === 'string').reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
+  const teamCounts = allMaps.map(m => m?.team).filter(t => typeof t === 'string' && t.trim() !== '').reduce((acc: any, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
 
   useEffect(() => {
     if (isFilterSheetOpen) {
@@ -146,7 +145,7 @@ function MapsContent() {
         <div className="mb-8 flex flex-col gap-6 text-center md:text-left">
           <div>
              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground">Kho Bản Đồ Tổng</h1>
-             <p className="mt-2 text-muted-foreground font-medium max-w-2xl">Khám phá vũ trụ map đa dạng từ cộng đồng Craftland!</p>
+             <p className="mt-2 text-muted-foreground font-medium max-w-2xl">Khám phá vũ trụ map đa dạng từ Tuglar Craftland</p>
           </div>
           
           <div className="relative z-10 bg-background/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-border shadow-xl md:max-w-4xl md:mx-auto w-full">
@@ -219,6 +218,19 @@ function MapsContent() {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* 🎯 ĐÃ FIX: Nút "Xem thêm" mọc ra khi có nhiều hơn 40 map */}
+        {visibleCount < filteredMaps.length && (
+          <div className="flex justify-center mt-12 mb-8">
+            <Button 
+              variant="outline" 
+              className="rounded-full px-8 h-12 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold uppercase tracking-widest transition-all shadow-lg"
+              onClick={() => setVisibleCount(prev => prev + 40)}
+            >
+              Hiển thị thêm bản đồ ({filteredMaps.length - visibleCount} map nữa)
+            </Button>
+          </div>
+        )}
       </div>
 
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

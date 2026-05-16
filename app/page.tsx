@@ -7,10 +7,10 @@ import { Flame, Shield, History } from "lucide-react"
 
 import { getMapsData, getEventsData } from "./maps/fetch-data" 
 
-// Định nghĩa logo cho các team sáng tạo
 const TEAM_LOGOS: Record<string, string> = {
   "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", 
   "GLX Craftland": "/team-avatar/GLX Craftland AVT.jpg",
+  "Tự do": "/team-avatar/community.png", // <--- Thêm team mới y như vầy
 }
 
 export default async function Home() {

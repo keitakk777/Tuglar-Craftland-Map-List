@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import CodeClient from "./code-client"
 // Import hàm lấy data bạn vừa dán vào file fetch-data.ts
-import { getCodeTutorials } from "./fetch-data"
+import { getCodeTutorials } from "../maps/fetch-data" 
 
 export default async function CodePage() {
   // Gọi data thật từ Google Sheet (thay vì dùng mock data)

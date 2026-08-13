@@ -5,7 +5,8 @@ import { TeamCarousel } from "@/components/team-carousel"
 import { EventBanner } from "@/components/event-banner"
 import { Flame, Shield, History } from "lucide-react"
 
-import { getMapsData, getEventsData } from "./maps/fetch-data" 
+import { getMapsData } from "./maps/fetch-map" 
+import { getEventsData } from "./maps/fetch-banner"
 
 const TEAM_LOGOS: Record<string, string> = {
   "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", 

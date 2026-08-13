@@ -1,6 +1,5 @@
 // @ts-nocheck
-
-const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH%3C/text%3E%3C/svg%3E";
+const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH%3C/text%3E%3C/svg%3E";
 
 export function getDirectImageUrl(rawUrl: string) {
   if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
@@ -40,20 +39,17 @@ function parsePatchNotes(rawText: string) {
   }).filter(Boolean);
 }
 
-// LẤY DỮ LIỆU KHO MAP
 export async function getMapsData() {
-  // LINK LẤY DATA MAP
   const MAP_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
   try {
     const res = await fetch(MAP_SHEET_URL, { next: { revalidate: 60 } });
-    const csvText = await res.text();
-    const rows = parseCSV(csvText);
+    const rows = parseCSV(await res.text());
     if (rows.length < 2) return [];
 
-    let headerIdx = rows.findIndex(r => r.join("").toLowerCase().includes("tên") || r.join("").toLowerCase().includes("name"));
-    if (headerIdx === -1) headerIdx = 1;
-
+    // 🎯 CHỐT CỨNG DÒNG 2 (index 1) LÀ TIÊU ĐỀ, KHÔNG DÒ TÌM GÌ NỮA
+    const headerIdx = 1;
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
+    
     const getIdx = (keys: string[]) => {
       for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
       for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
@@ -153,56 +149,4 @@ export async function getMapsData() {
     maps.sort((a, b) => b.sortTime - a.sortTime); 
     return maps;
   } catch (error) { return []; }
-}
-
-// LẤY DỮ LIỆU BANNER / SỰ KIỆN
-export async function getEventsData() {
-  // 🎯 THAY THẾ BẰNG LINK CSV CỦA TAB BANNER WEB CỦA BẠN
-  const BANNER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=252391090&single=true&output=csv";
-
-  try {
-    const res = await fetch(BANNER_SHEET_URL, { next: { revalidate: 60 } });
-    if (!res.ok) throw new Error("Lỗi kết nối Banner");
-    const csvText = await res.text();
-    const rows = parseCSV(csvText);
-
-    return rows.slice(1).map(row => {
-      if (!row[0]) return null;
-
-      let endTimeStr = row[11] || "";
-      if (endTimeStr && endTimeStr.includes("/")) {
-          const parts = endTimeStr.split(" ");
-          const dateParts = parts[0].split("/");
-          if (dateParts.length === 3) endTimeStr = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${parts[1] || "00:00:00"}`;
-      }
-
-      const rawMilestones = row[14] || "";
-      const milestones = rawMilestones.split(";").filter(Boolean).map(m => {
-        const parts = m.split("|");
-        if (parts.length < 2) return null;
-        return { date: parts[0].trim(), label: parts[1].trim() };
-      }).filter(m => m !== null);
-
-      return {
-        id: row[0],
-        tag: row[1] || "Sự kiện",
-        title: (row[2] || "").replace(/\\n/g, '\n'),
-        description: row[3] || "",
-        image: getDirectImageUrl(row[4] || ""),
-        status: row[6] || "Đang diễn ra",
-        prize: row[7] || "",
-        prizeUnit: row[8] || "",
-        participants: row[9] || "0",
-        date: row[10] || "",
-        endTime: endTimeStr,
-        actionText: row[12] || "Tham gia",
-        actionLink: row[13] || "#",
-        milestones: milestones
-      };
-    }).filter(Boolean);
-
-  } catch (e) {
-    console.error("Lỗi fetch Events", e);
-    return [];
-  }
 }

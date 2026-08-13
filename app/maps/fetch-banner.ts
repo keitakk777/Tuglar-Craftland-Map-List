@@ -22,7 +22,7 @@ function parseCSVObj(csvText: string) {
 
 export async function getEventsData() {
   // 🎯 LINK NÀY CHUYÊN ĐỂ LẤY TAB "BANNER WEB"
-  const BANNER_SHEET_URL = "https://docs.google.com/spreadsheets/d/14LTTUD93PHQSxIQmf-b0rS-b_vVi7vxQmM3bID2OSbQ/edit?gid=1652673201#gid=1652673201";
+  const BANNER_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv";
 
   try {
     const res = await fetch(BANNER_SHEET_URL, { next: { revalidate: 60 } });

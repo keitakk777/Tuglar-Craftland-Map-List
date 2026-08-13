@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { id: "all-maps", label: "Kho Map", href: "/maps" }, 
   { id: "assets", label: "Kho Asset", href: "/assets" }, 
   // 🎯 Đã đổi tên, ID và đường dẫn thành Code
-  { id: "code", label: "Code", href: "/code" }, 
+  { id: "code", label: "Kho Code", href: "/code" }, 
 ]
 
 export function Header() {

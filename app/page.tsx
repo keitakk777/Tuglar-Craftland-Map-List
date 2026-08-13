@@ -4,8 +4,8 @@ import { MapCarousel } from "@/components/map-carousel"
 import { TeamCarousel } from "@/components/team-carousel" 
 import { EventBanner } from "@/components/event-banner"
 import { Flame, Shield, History } from "lucide-react"
-
-import { getMapsData, getEventsData } from "./maps/fetch-map"
+import { getMapsData } from "./maps/fetch-map"
+import { getEventsData } from "./maps/fetch-banner"
 
 const TEAM_LOGOS: Record<string, string> = {
   "Tuglar Craftland": "/team-avatar/tuglar craftland avt.jpg", 
@@ -20,13 +20,14 @@ export default async function Home() {
     getEventsData().catch(() => [])
   ]);
 
-  // 1. Lọc các Map có đánh dấu Xu hướng (Trending)
-  const trendingMaps = ALL_MAPS.filter(map => map.isTrending);
+  // 1. Lọc các Map Xu hướng (Trending)
+  // Vì trên Google Sheet hiện tại chưa có cột "Xu hướng", ta sẽ lấy 6 map mới cập nhật nhất để hiển thị
+  const trendingMaps = ALL_MAPS.slice(0, 6);
 
   // 2. 🎯 TỰ ĐỘNG LẤY TOP 10 MAP MỚI NHẤT TỪ TUGLAR
   // Lấy các bản đồ thuộc team Tuglar và giới hạn 10 cái đầu tiên (đã được sort theo ngày ở fetch-data)
   const latestTuglarMaps = ALL_MAPS
-    .filter(map => map.team === "Tuglar Craftland" || map.isTuglar)
+    .filter(map => map.team === "Tuglar Craftland")
     .slice(0, 10); 
   
   // 3. Xử lý danh sách Đội ngũ sáng tạo nổi bật

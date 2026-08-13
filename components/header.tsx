@@ -12,10 +12,11 @@ import { motion, AnimatePresence } from "framer-motion"
 const REGISTER_LINK = "https://www.facebook.com/share/p/1CHwyRwAYp/"
 
 const NAV_LINKS = [
-  { id: "custom-btx", label: "Custom BTX", href: "/custom-btx" }, 
+  // { id: "custom-btx", label: "Custom BTX", href: "/custom-btx" }, 
   { id: "all-maps", label: "Kho Map", href: "/maps" }, 
   { id: "assets", label: "Kho Asset", href: "/assets" }, 
-  { id: "be-tap-code", label: "Bé Tập Code", href: "/be-tap-code" }, 
+  // 🎯 Đã đổi tên, ID và đường dẫn thành Code
+  { id: "code", label: "Code", href: "/code" }, 
 ]
 
 export function Header() {
@@ -26,11 +27,9 @@ export function Header() {
   const pathname = usePathname()
   const [activeSection, setActiveSection] = useState("")
   
-  // 🎯 FIX 1: Dùng useRef thay vì useState để không gây re-render vô hạn
   const lastScrollY = useRef(0)
   const isClickNavigating = useRef(false)
 
-  // 🎯 FIX 2: Tách mounted ra chạy độc lập đúng 1 lần khi load web
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -40,14 +39,12 @@ export function Header() {
       const currentScrollY = window.scrollY
       const isMobileView = window.innerWidth < 768;
 
-      // Dùng lastScrollY.current để so sánh
       if (isMobileView && currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsVisible(false) 
       } else {
         setIsVisible(true) 
       }
       
-      // Cập nhật vị trí cuộn mới vào két sắt (không làm re-render)
       lastScrollY.current = currentScrollY
 
       if (window.location.pathname !== "/") return
@@ -70,7 +67,7 @@ export function Header() {
     
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [pathname]) // 🎯 FIX 3: Đã đá "lastScrollY" ra khỏi mảng phụ thuộc
+  }, [pathname]) 
 
   const logoSrc = "/Logo Full Tuglar Craftland new.png"
 
@@ -93,26 +90,26 @@ export function Header() {
       initial={{ y: 0, opacity: 1 }}
       animate={{ y: isVisible ? 0 : -100, opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#020617]/80 backdrop-blur-md"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#020617]"
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center h-16">
           <img src={logoSrc} alt="Logo" className="h-10 w-auto object-contain" draggable="false" />
         </Link>
 
-        {/* CỘT PHẢI (Desktop) */}
         <div className="hidden md:flex h-full items-center gap-8">
           <nav className="flex h-full items-center gap-6">
             {NAV_LINKS.map((link) => {
               const isAnchor = link.href.startsWith("/#")
-              const isActive = isAnchor ? (pathname === "/" && activeSection === link.id) : (pathname === link.href)
+              const isActive = isAnchor ? (pathname === "/" && activeSection === link.id) : pathname.startsWith(link.href)
               return (
                 <Link key={link.id} href={link.href} onClick={() => handleNavClick(link.id, isAnchor)} className={`relative flex h-full items-center px-1 text-sm font-bold transition-colors hover:text-yellow-500 ${isActive ? "text-yellow-500" : "text-slate-300"}`}>
                   <span className="relative z-10 flex items-center gap-2">
                     {link.id === "custom-btx" && <Hammer className="h-4 w-4" />}
                     {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.id === "assets" && <Box className="h-4 w-4" />}
-                    {link.id === "be-tap-code" && <Code className="h-4 w-4" />}
+                    {/* 🎯 Cập nhật icon cho ID mới */}
+                    {link.id === "code" && <Code className="h-4 w-4" />}
                     {link.label}
                   </span>
                   {isActive && <motion.div layoutId="header-active-link" className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-md bg-yellow-500 shadow-[0_-2px_10px_rgba(234,179,8,0.5)]" initial={false} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
@@ -134,7 +131,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* CỘT PHẢI (Mobile) */}
         <div className="flex items-center gap-1 md:hidden">
           {mounted && (
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="h-9 w-9 rounded-full bg-white/5 border border-white/10 ml-1">
@@ -147,20 +143,20 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-white/10 bg-[#0a0f1a]/95 backdrop-blur-xl md:hidden shadow-2xl overflow-hidden">
             <nav className="flex flex-col gap-3 p-6">
               {NAV_LINKS.map((link) => {
                 const isAnchor = link.href.startsWith("/#")
-                const isActive = isAnchor ? (pathname === "/" && activeSection === link.id) : (pathname === link.href)
+                const isActive = isAnchor ? (pathname === "/" && activeSection === link.id) : pathname.startsWith(link.href)
                 return (
                   <Link key={link.id} href={link.href} onClick={() => { setIsMenuOpen(false); handleNavClick(link.id, isAnchor) }} className={`flex items-center gap-3 rounded-xl px-5 py-4 text-sm font-bold transition-all ${isActive ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : "text-slate-300 border border-transparent hover:bg-white/10"}`}>
                     {link.id === "custom-btx" && <Hammer className="h-4 w-4" />}
                     {link.id === "all-maps" && <Search className="h-4 w-4" />}
                     {link.id === "assets" && <Box className="h-4 w-4" />}
-                    {link.id === "be-tap-code" && <Code className="h-4 w-4" />}
+                    {/* 🎯 Cập nhật icon cho ID mới */}
+                    {link.id === "code" && <Code className="h-4 w-4" />}
                     {link.label}
                   </Link>
                 )

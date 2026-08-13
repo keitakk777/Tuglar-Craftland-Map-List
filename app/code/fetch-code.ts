@@ -9,7 +9,7 @@ export interface CodeTutorial {
   status: string;
 }
 
-// Hàm tự viết để đọc CSV không cần cài thư viện
+// Hàm tự viết để đọc CSV siêu chuẩn (bỏ qua dấu phẩy trong ngoặc kép)
 function parseCSV(csvText: string) {
   const result: any[] = [];
   const lines = csvText.split(/\r?\n/);
@@ -20,7 +20,6 @@ function parseCSV(csvText: string) {
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     
-    // Tách cột bằng dấu phẩy, xử lý chuẩn xác dấu phẩy nằm trong ngoặc kép
     const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
     const obj: any = {};
     
@@ -33,9 +32,10 @@ function parseCSV(csvText: string) {
   return result;
 }
 
-// Hàm lấy dữ liệu CODE
+// LẤY DỮ LIỆU THƯ VIỆN CODE
 export async function getCodeTutorials(): Promise<CodeTutorial[]> {
   try {
+    // 🎯 Đã cập nhật đúng ID tab Kho Code của bạn (gid=2040973686)
     const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=2040973686&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { next: { revalidate: 60 } });

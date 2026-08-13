@@ -1,6 +1,6 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getAssetsData } from "@/app/maps/fetch-data"
+import { getAssetsData } from "./fetch-asset"
 import AssetLibrary from "./asset-library"
 import { Box } from "lucide-react"
 

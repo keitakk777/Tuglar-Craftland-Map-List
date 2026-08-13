@@ -11,7 +11,7 @@ import { Users, Play, Copy, Check, Flame, Search, Filter, ChevronUp, Loader2, Sh
 import { motion, AnimatePresence } from "framer-motion"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet"
 
-import { getMapsData } from "./fetch-data"
+import { getMapsData } from "./fetch-map"
 
 const TEAM_LOGOS: Record<string, string> = {
   "Tuglar Craftland": "/icon/icon short tuglar dark.png", 

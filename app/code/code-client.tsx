@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Play, FileText, User, Search, Filter } from "lucide-react";
-import { CodeTutorial } from "./fetch-data"; // Đường dẫn tuỳ vào cấu trúc của bạn
+// 🎯 Import type từ file fetch-data.ts cùng thư mục (chú ý đường dẫn ./ )
+import { CodeTutorial } from "./fetch-code";
 import Link from "next/link";
 
 export default function CodeClient({ initialData }: { initialData: CodeTutorial[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Logic Tìm kiếm & Lọc
   const filteredData = initialData.filter((tut) => {
     const matchesSearch = tut.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           tut.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));

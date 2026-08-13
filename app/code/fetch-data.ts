@@ -9,7 +9,7 @@ export interface CodeTutorial {
   status: string;
 }
 
-// Hàm hỗ trợ dịch file CSV thành dữ liệu mảng
+// Hàm hỗ trợ đọc file CSV (được tuỳ biến chuẩn xác cho dấu phẩy)
 function parseCSV(csvText: string) {
   const lines = csvText.split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -21,7 +21,7 @@ function parseCSV(csvText: string) {
     const line = lines[i].trim();
     if (!line) continue;
     
-    // Tách cột thông minh, không bị lỗi nếu trong text có dấu phẩy
+    // Tách cột bằng dấu phẩy, xử lý chuẩn xác dấu phẩy nằm trong ngoặc kép
     const currentline = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
     const obj: any = {};
     
@@ -34,19 +34,18 @@ function parseCSV(csvText: string) {
   return result;
 }
 
-// Hàm lấy dữ liệu
+// Hàm lấy dữ liệu cho riêng trang CODE
 export async function getCodeTutorials(): Promise<CodeTutorial[]> {
   try {
-    // 🎯 DÁN ĐƯỜNG LINK .CSV CỦA TAB CODE VÀO ĐÂY
-    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv"; 
+    // 🎯 URL Đã được cập nhật thành gid của tab CODE
+    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=2040973686&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { 
       next: { revalidate: 60 } 
     });
     
-    // 🎯 CHỖ NÀY PHẢI LÀ res.text() CHỨ KHÔNG PHẢI res.json()
     const csvText = await res.text(); 
-    const data = parseCSV(csvText);   
+    const data: any[] = parseCSV(csvText);   
     
     return data
       .filter((item: any) => item['Trạng thái'] === 'Hiện')
@@ -60,7 +59,7 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
         tags: item['Tags'] ? item['Tags'].split(',').map((t: string) => t.trim()) : [],
       }));
   } catch (error) {
-    console.error("Lỗi khi lấy data:", error);
+    console.error("Lỗi khi lấy data CODE:", error);
     return [];
   }
 }

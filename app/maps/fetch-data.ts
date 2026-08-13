@@ -2,7 +2,7 @@
 const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Cg transform='translate(364, 140) scale(3)'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='9' cy='9' r='2' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='3' y1='3' x2='21' y2='21' fill='none' stroke='%23ef4444' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3Ctext x='50%25' y='280' font-family='sans-serif' font-size='24' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHIẾU ẢNH%3C/text%3E%3C/svg%3E";
 
 // ==========================================
-// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG (BẢN NỒI ĐỒNG CỐI ĐÁ)
+// 1. HÀM XỬ LÝ LINK ẢNH TỰ ĐỘNG
 // ==========================================
 export function getDirectImageUrl(rawUrl: string) {
   if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
@@ -15,7 +15,6 @@ export function getDirectImageUrl(rawUrl: string) {
   const match = rawUrl.match(driveRegex);
   
   if (match && match[1]) {
-    // 🎯 ĐÃ FIX: Dùng phép cộng chuỗi (+) để nối link lh3 xịn nhất của Google, đảm bảo không bao giờ trượt ID
     return "https://lh3.googleusercontent.com/d/" + match[1];
   }
 
@@ -23,7 +22,7 @@ export function getDirectImageUrl(rawUrl: string) {
 }
 
 // ==========================================
-// 2. HÀM HÚT DATA MAP (ĐÃ FIX: HÚT ĐÚNG CỘT TEAM)
+// 2. HÀM HÚT DATA MAP
 // ==========================================
 export async function getMapsData() {
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
@@ -55,7 +54,6 @@ export async function getMapsData() {
     const idxDate = getIdx(["update", "cập nhật", "ngày", "date"]);
     const idxPreview = getIdx(["preview", "video", "clip"]);
     const idxLinkMap = getIdx(["link map", "link"]); 
-    // 🎯 ĐÃ FIX: Thêm lệnh dò tìm vị trí cột Team
     const idxTeam = getIdx(["team", "đội", "nhóm"]);
 
     const maps = [];
@@ -122,7 +120,6 @@ export async function getMapsData() {
 
       let rawGameMode = idxGameMode >= 0 && row[idxGameMode] ? String(row[idxGameMode]) : "Chế độ";
       let rawTeamMode = idxTeamMode >= 0 && row[idxTeamMode] ? String(row[idxTeamMode]) : "Tự do";
-      // 🎯 ĐÃ FIX: Lấy dữ liệu Team từ Sheet thay vì gõ cứng
       let rawTeam = idxTeam >= 0 && row[idxTeam] ? String(row[idxTeam]).trim() : "Tự do";
 
       const typeTagsList = rawGameMode.split(",").map(s => s.trim()).filter(Boolean);
@@ -135,7 +132,7 @@ export async function getMapsData() {
         id: mapId, 
         name: mapName, 
         creator: idxCreator >= 0 && row[idxCreator] ? String(row[idxCreator]) : "Ẩn danh",
-        team: rawTeam, // 🎯 ĐÃ FIX: Hút biến Team vào đây
+        team: rawTeam,
         displayType: rawGameMode,
         typeTags: typeTagsList.length > 0 ? typeTagsList : ["Chế độ"],
         displayPlayers: rawTeamMode,
@@ -160,7 +157,7 @@ export async function getMapsData() {
 // 3. HÀM HÚT DATA SỰ KIỆN 
 // ==========================================
 export async function getEventsData() {
-  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv";
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv";
 
   try {
     const res = await fetch(SHEET_URL, { next: { revalidate: 60 } });

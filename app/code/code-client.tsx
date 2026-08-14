@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CodeTutorial } from "./fetch-code";
 import Link from "next/link";
-// Import Dialog cho Bộ lọc nổi bật giữa màn hình
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {

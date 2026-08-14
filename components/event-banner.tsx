@@ -19,7 +19,18 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
-      const target = new Date(targetDate).getTime();
+      let target = new Date(targetDate.replace(" ", "T")).getTime();
+      
+      if (isNaN(target)) {
+        const parts = targetDate.split(" ");
+        if (parts.length >= 1) {
+            const dateParts = parts[0].split("/");
+            if (dateParts.length === 3) {
+                target = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${parts[1] || '00:00:00'}`).getTime();
+            }
+        }
+      }
+
       const distance = target - now;
 
       if (distance < 0) {
@@ -44,6 +55,21 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   return <span className="tabular-nums whitespace-nowrap">{timeLeft}</span>; 
 };
 
+// Hàm xử lý cắt chuỗi ngày tháng từ Sheet ra dạng Date thực tế
+const parseDateStr = (str: string) => {
+    let dStr = str;
+    if (dStr.includes('-')) dStr = dStr.split('-')[0].trim();
+    if (dStr.includes(' ')) dStr = dStr.split(' ').pop() || dStr;
+    dStr = dStr.trim();
+    const parts = dStr.split('/');
+    if (parts.length >= 2) {
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        return new Date(new Date().getFullYear(), month - 1, day);
+    }
+    return new Date();
+};
+
 export function EventBanner({ events = [] }: { events?: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [progressWidth, setProgressWidth] = useState("0%");
@@ -55,18 +81,22 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
   if (!activeEvent) return null;
 
   useEffect(() => {
-    if (!activeEvent.milestones || activeEvent.milestones.length === 0) return;
+    if (!activeEvent.milestones || activeEvent.milestones.length === 0) {
+      setProgressWidth("0%");
+      setPassedNodes([]);
+      return;
+    }
+    
     const calculateProgress = () => {
       const current = new Date();
-      const eventYear = activeEvent.endTime ? new Date(activeEvent.endTime).getFullYear() : current.getFullYear();
+      const currTime = current.getTime();
       const totalNodes = activeEvent.milestones.length;
+      
       const parsed = activeEvent.milestones.map((ms: any, index: number) => {
-        const parts = ms.date.split('-');
-        const [day, month] = parts[0].split('/');
-        const startDate = new Date(eventYear, parseInt(month) - 1, parseInt(day));
+        const startDate = parseDateStr(ms.dateStr || ms.date);
         return { start: startDate.getTime(), percent: totalNodes > 1 ? (index / (totalNodes - 1)) * 100 : 100 };
       });
-      const currTime = current.getTime();
+      
       setPassedNodes(parsed.map((p: any) => currTime >= p.start));
 
       if (currTime < parsed[0].start) { setProgressWidth("0%"); return; }
@@ -80,6 +110,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
         }
       }
     };
+    
     calculateProgress();
     const timer = setInterval(calculateProgress, 60000); 
     return () => clearInterval(timer);
@@ -92,7 +123,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
       
       <div className="container relative mx-auto px-4 pb-12 pt-1 md:pt-8">
         
-        {/* HEADER MOBILE: Đã fix khoảng cách Pill & Tiêu đề */}
+        {/* HEADER MOBILE */}
         <div className="block lg:hidden mb-5 text-center">
             <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest text-[10px]">
               {activeEvent.tag || "Sự kiện"}
@@ -112,13 +143,13 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 items-start">
           
-          {/* CỘT TRÁI: BANNER (STATS OVERLAY) + TIẾN ĐỘ */}
+          {/* CỘT TRÁI: BANNER + TIẾN ĐỘ */}
           <div className="w-full lg:w-1/2 flex flex-col gap-6 relative z-10 shrink-0">
             <div className="relative aspect-[16/9] md:aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl group">
               <AnimatePresence mode="wait">
                 <motion.img 
                   key={activeEvent.id}
-                  src={activeEvent.image || "/placeholder.jpg"} 
+                  src={activeEvent.imageUrl || activeEvent.image || "/placeholder.jpg"} 
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                   alt="Banner" 
@@ -129,34 +160,6 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                 <Badge className={`${activeEvent.status === "Đã kết thúc" ? "bg-muted-foreground text-white" : "bg-destructive text-white"} border-none shadow-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wider`}>
                   {activeEvent.status}
                 </Badge>
-              </div>
-
-              {/* STATS OVERLAY: Gradient đen mờ đè lên ảnh banner */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 pt-10 bg-gradient-to-t from-black/95 via-black/60 to-transparent">
-                <div className="grid grid-cols-4 gap-2">
-                   <div className="flex flex-col items-center justify-center text-white">
-                      <Trophy className="h-4 w-4 text-yellow-500 mb-1" />
-                      <p className="text-[10px] md:text-xs font-black uppercase tracking-tight">{activeEvent.prize}</p>
-                      <p className="text-[7px] md:text-[8px] font-bold text-white/50 uppercase">{activeEvent.prizeUnit}</p>
-                   </div>
-                   <div className="flex flex-col items-center justify-center text-white border-l border-white/10">
-                      <Users className="h-4 w-4 text-yellow-500 mb-1" />
-                      <p className="text-[10px] md:text-xs font-black uppercase tracking-tight">{activeEvent.participants}</p>
-                      <p className="text-[7px] md:text-[8px] font-bold text-white/50 uppercase">Tham gia</p>
-                   </div>
-                   <div className="flex flex-col items-center justify-center text-white border-l border-white/10">
-                      <Calendar className="h-4 w-4 text-yellow-500 mb-1" />
-                      <p className="text-[8px] md:text-[10px] font-black uppercase tracking-tighter">{activeEvent.date}</p>
-                      <p className="text-[7px] md:text-[8px] font-bold text-white/50 uppercase">Hạn chót</p>
-                   </div>
-                   <div className="flex flex-col items-center justify-center text-white border-l border-white/10">
-                      <Clock className="h-4 w-4 text-yellow-500 mb-1" />
-                      <div className="text-[8px] md:text-[10px] font-black uppercase text-yellow-500">
-                        <CountdownTimer targetDate={activeEvent.endTime} />
-                      </div>
-                      <p className="text-[7px] md:text-[8px] font-bold text-white/50 uppercase">Còn lại</p>
-                   </div>
-                </div>
               </div>
             </div>
 
@@ -177,7 +180,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                             {isPassed ? <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-black" /> : <div className="h-1.5 w-1.5 bg-slate-500 rounded-full" />}
                           </div>
                           <div className="text-center space-y-0.5">
-                            <p className="text-[8px] md:text-[10px] font-black text-foreground whitespace-nowrap">{ms.date}</p>
+                            <p className="text-[8px] md:text-[10px] font-black text-foreground whitespace-nowrap">{ms.dateStr || ms.date}</p>
                             <p className={`text-[7px] md:text-[9px] font-bold uppercase line-clamp-1 ${isPassed ? 'text-yellow-500' : 'text-muted-foreground'}`}>{ms.label}</p>
                           </div>
                         </div>
@@ -189,11 +192,11 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
             )}
 
             {/* TOGGLE SỰ KIỆN NHANH (MOBILE) */}
-            <div className="block lg:hidden w-full overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
+            <div className="block lg:hidden w-full overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden mt-2">
                <div className="flex gap-3">
                 {events.map((event, index) => (
                     <div key={event.id || index} onClick={() => setActiveIndex(index)} className={`shrink-0 w-28 aspect-[16/9] relative cursor-pointer overflow-hidden rounded-xl transition-all ${activeIndex === index ? 'ring-2 ring-yellow-500' : 'opacity-40'}`}>
-                      <img src={event.image || "/placeholder.jpg"} className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={event.imageUrl || event.image || "/placeholder.jpg"} className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                 ))}
               </div>
@@ -221,9 +224,33 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
                       {activeEvent.description}
                     </p>
                   </div>
-                  <div className="mt-4">
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 mb-4">
+                    <div className="bg-card border border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-1 shadow-sm">
+                        <Trophy className="h-5 w-5 text-yellow-500 mb-1" />
+                        <p className="text-xl font-black">{activeEvent.prize}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{activeEvent.prizeUnit}</p>
+                    </div>
+                    <div className="bg-card border border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-1 shadow-sm">
+                        <Users className="h-5 w-5 text-orange-500 mb-1" />
+                        <p className="text-xl font-black">{activeEvent.participants}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tham gia</p>
+                    </div>
+                    <div className="bg-card border border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-1 shadow-sm">
+                        <Calendar className="h-5 w-5 text-blue-500 mb-1" />
+                        <p className="text-sm font-black mt-1 mb-0.5">{activeEvent.dateRange || activeEvent.date}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Thời gian</p>
+                    </div>
+                    <div className="bg-card border border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-1 shadow-sm">
+                        <Clock className="h-5 w-5 text-red-500 mb-1" />
+                        <p className="text-sm font-black text-yellow-500 mt-1 mb-0.5"><CountdownTimer targetDate={activeEvent.endTime} /></p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Còn lại</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
                     <a href={activeEvent.actionLink || "#"} target="_blank" rel="noopener noreferrer">
-                      <Button size="lg" className="w-fit min-w-[200px] bg-yellow-500 hover:bg-yellow-600 text-black font-black uppercase tracking-wider rounded-2xl h-14 px-10 shadow-xl">
+                      <Button size="lg" className="w-fit min-w-[200px] bg-yellow-500 hover:bg-yellow-600 text-black font-black uppercase tracking-wider rounded-2xl h-14 px-10 shadow-xl transition-transform hover:scale-105">
                         {activeEvent.actionText || "Tham gia ngay"}
                       </Button>
                     </a>
@@ -238,7 +265,7 @@ export function EventBanner({ events = [] }: { events?: any[] }) {
               <div className="flex w-full gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
                 {events.map((event, index) => (
                     <div key={event.id || index} onClick={() => setActiveIndex(index)} className={`shrink-0 w-36 aspect-[16/9] relative cursor-pointer overflow-hidden rounded-xl transition-all ${activeIndex === index ? 'ring-2 ring-yellow-500 scale-95' : 'opacity-40 hover:opacity-100'}`}>
-                      <img src={event.image || "/placeholder.jpg"} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <img src={event.imageUrl || event.image || "/placeholder.jpg"} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
                         <p className={`text-[9px] font-bold line-clamp-1 ${activeIndex === index ? 'text-yellow-400' : 'text-white'}`}>{event.title?.replace('\n', ' ')}</p>
                       </div>

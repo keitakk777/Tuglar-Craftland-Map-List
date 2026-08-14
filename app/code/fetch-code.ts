@@ -10,7 +10,8 @@ export interface CodeTutorial {
   thumbnail: string;
   facebookUrl: string;
   videoUrl: string;
-  type: string; 
+  type: string;        // Mạng Xã Hội (youtube, tiktok, facebook, text)
+  device: string;      // Nền tảng thiết bị (Mobile, PC) <-- BỔ SUNG MỚI
   status: string;
 }
 
@@ -25,24 +26,16 @@ export function getDirectImageUrl(rawUrl: string) {
   return rawUrl;
 }
 
-// Hàm tự động lấy ảnh Thumbnail
 function getAutoThumbnail(videoUrl: string, platform: string, currentThumb: string) {
-  // 1. Nếu bạn ĐÃ ĐIỀN link ảnh vào Google Sheet -> Ưu tiên dùng luôn ảnh của bạn
   if (currentThumb && currentThumb !== "undefined" && currentThumb !== "" && currentThumb !== "NaN") {
     return getDirectImageUrl(currentThumb);
   }
-
-  // 2. Nếu bạn BỎ TRỐNG cột Thumbnail trong Sheet:
-  // TỰ ĐỘNG LẤY ẢNH YOUTUBE
   if (platform === "youtube" && videoUrl) {
     const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&"'>]+)/);
     if (ytMatch && ytMatch[1]) {
-      // hqdefault.jpg là chất lượng cao, có thể đổi thành maxresdefault.jpg nếu muốn siêu nét
       return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
     }
   }
-
-  // 3. Với Tiktok/Facebook bị bỏ trống -> Trả về ảnh mặc định tránh vỡ khung
   return ERROR_IMAGE;
 }
 
@@ -88,6 +81,7 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
 
     const idxId = getIdx(["stt"]);
     const idxDate = getIdx(["ngày", "date"]);
+    const idxDevice = getIdx(["nền tảng", "device"]); // <-- Đọc cột Nền tảng thiết bị mới
     const idxCreator = getIdx(["creator", "tác giả"]);
     const idxTags = getIdx(["tags"]);
     const idxName = getIdx(["name", "tên"]);
@@ -127,6 +121,9 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
       let rawThumb = idxThumb >= 0 && row[idxThumb] ? String(row[idxThumb]).trim() : "";
       let finalThumbnail = getAutoThumbnail(vidLink, platformType, rawThumb);
 
+      // 🎯 Xử lý cột Nền tảng Thiết bị (Mặc định là Mobile nếu không điền)
+      let deviceType = idxDevice >= 0 && row[idxDevice] ? String(row[idxDevice]).trim() : "Mobile";
+
       tutorials.push({
         id: idxId >= 0 && row[idxId] ? String(row[idxId]) : Math.random().toString(),
         date: idxDate >= 0 && row[idxDate] ? String(row[idxDate]) : "Cập nhật gần đây",
@@ -138,9 +135,10 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
         facebookUrl: fbLink,
         videoUrl: vidLink,
         type: platformType,
+        device: deviceType, // <-- Đẩy dữ liệu vào
         status: "Hiện"
       });
-    } // <-- CHỖ NÀY LÚC NÃY BỊ THIẾU DẤU }
+    }
 
     console.log("=> Lấy thành công:", tutorials.length, "bài Code.");
     return tutorials;

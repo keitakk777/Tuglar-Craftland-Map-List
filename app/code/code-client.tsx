@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, X, Code2, ExternalLink, Calendar, User, AlignLeft, Video, Filter, ChevronUp, FileText } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, X, Code2, ExternalLink, Calendar, User, AlignLeft, Video, Filter, ChevronUp, FileText, Smartphone, Monitor } from "lucide-react";
 import { SiYoutube, SiTiktok, SiFacebook } from "react-icons/si";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,11 +11,18 @@ import { CodeTutorial } from "./fetch-code";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
+// Icon MXH
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   youtube: <SiYoutube className="w-5 h-5 text-red-500" />,
   tiktok: <SiTiktok className="w-5 h-5 text-slate-900 dark:text-white" />,
   facebook: <SiFacebook className="w-5 h-5 text-blue-500" />,
   text: <FileText className="w-5 h-5 text-yellow-500" />,
+};
+
+// Icon Thiết Bị (PC / Mobile) dạng Solid màu đen
+const DEVICE_ICONS: Record<string, React.ReactNode> = {
+  pc: <Monitor className="w-4 h-4 text-black dark:text-black fill-current" />,
+  mobile: <Smartphone className="w-4 h-4 text-black dark:text-black fill-current" />,
 };
 
 const getYoutubeEmbedUrl = (url: string) => {
@@ -37,11 +44,13 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
   
   // State lọc thực tế đang áp dụng
   const [activePlatform, setActivePlatform] = useState("all");
+  const [activeDevice, setActiveDevice] = useState("all");
   const [activeTag, setActiveTag] = useState("all");
 
   // State tạm thời khi mở Dialog bộ lọc
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempPlatform, setTempPlatform] = useState("all");
+  const [tempDevice, setTempDevice] = useState("all");
   const [tempTag, setTempTag] = useState("all");
 
   const [selectedTut, setSelectedTut] = useState<CodeTutorial | null>(null);
@@ -58,19 +67,20 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
     const matchesSearch = tut.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           tut.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesPlatform = activePlatform === "all" || tut.type === activePlatform;
+    const matchesDevice = activeDevice === "all" || tut.device.toLowerCase() === activeDevice.toLowerCase();
     const matchesTag = activeTag === "all" || tut.tags.includes(activeTag);
-    return matchesSearch && matchesPlatform && matchesTag;
+    return matchesSearch && matchesPlatform && matchesDevice && matchesTag;
   });
 
   // Đồng bộ temp state khi mở Dialog
   useEffect(() => {
     if (isFilterOpen) {
       setTempPlatform(activePlatform);
+      setTempDevice(activeDevice);
       setTempTag(activeTag);
     }
-  }, [isFilterOpen, activePlatform, activeTag]);
+  }, [isFilterOpen, activePlatform, activeDevice, activeTag]);
 
-  // Cuộn trang
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -81,16 +91,18 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
 
   const handleApplyFilter = () => {
     setActivePlatform(tempPlatform);
+    setActiveDevice(tempDevice);
     setActiveTag(tempTag);
     setIsFilterOpen(false);
   };
 
   const handleResetFilter = () => {
     setTempPlatform("all");
+    setTempDevice("all");
     setTempTag("all");
   };
 
-  const isFilterActive = activePlatform !== "all" || activeTag !== "all";
+  const isFilterActive = activePlatform !== "all" || activeDevice !== "all" || activeTag !== "all";
 
   return (
     <div className="relative pb-24">
@@ -105,10 +117,9 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
         </p>
       </div>
 
-      {/* THANH TÌM KIẾM CƠ BẢN (NẰM NGANG TRÊN MÀN HÌNH) */}
+      {/* THANH TÌM KIẾM CƠ BẢN */}
       <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 sm:p-5 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
         
-        {/* Input Tìm kiếm */}
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <Input 
@@ -120,7 +131,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
           />
         </div>
 
-        {/* Cụm 3 nút MXH thao tác nhanh */}
         <div className="flex gap-2 shrink-0 bg-slate-100 dark:bg-[#0a0f1a] p-1.5 rounded-2xl shadow-inner border border-slate-200 dark:border-white/5">
           {['youtube', 'tiktok', 'facebook'].map((plat) => (
             <Button
@@ -153,6 +163,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
           <AnimatePresence mode="popLayout">
             {filteredData.map((tut, index) => {
               const hasThumbnail = tut.thumbnail && !tut.thumbnail.includes("THIẾU ẢNH") && !tut.thumbnail.includes("ERROR");
+              const deviceKey = tut.device?.toLowerCase() === "pc" ? "pc" : "mobile";
 
               return (
                 <motion.div key={tut.id} layout initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: (index % 3) * 0.1 }} onClick={() => setSelectedTut(tut)} className="group cursor-pointer h-full">
@@ -167,13 +178,21 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                           <span className="text-slate-400 text-xs font-mono line-clamp-1 px-4">{tut.title}</span>
                         </div>
                       )}
-                      <div className="absolute top-4 left-4 bg-white/95 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm z-10 border border-slate-200 dark:border-white/10">
-                        {PLATFORM_ICONS[tut.type] || <FileText className="w-4 h-4 text-yellow-500" />}
-                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider">{tut.type === "text" ? "Tài liệu" : tut.type}</span>
+                      
+                      {/* 🎯 HAI PILL GÓC TRÁI TRÊN */}
+                      <div className="absolute top-4 left-4 flex gap-2 z-10">
+                        {/* Pill Thiết Bị */}
+                        <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`Nền tảng: ${tut.device}`}>
+                          {DEVICE_ICONS[deviceKey]}
+                        </div>
+                        {/* Pill Mạng Xã Hội (Chỉ Icon) */}
+                        <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`MXH: ${tut.type}`}>
+                          {PLATFORM_ICONS[tut.type] || <FileText className="w-4 h-4 text-yellow-500" />}
+                        </div>
                       </div>
                     </div>
                     
-                    <CardContent className="p-5 pt-0 flex flex-col flex-1">
+                    <CardContent className="p-5 flex flex-col flex-1">
                       <div className="flex flex-wrap gap-2 mb-3">
                         {tut.tags.map(tag => (
                           <span key={tag} className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 px-2.5 py-1 rounded-md">#{tag}</span>
@@ -223,25 +242,58 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
             </Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-lg rounded-3xl bg-white dark:bg-[#0a0f1a] border border-slate-200 dark:border-white/10 shadow-2xl p-0 overflow-hidden">
-            <DialogHeader className="p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
-              <DialogTitle className="text-xl font-black uppercase tracking-widest text-slate-900 dark:text-white">
+          <DialogContent className="sm:max-w-md rounded-3xl bg-white dark:bg-[#0a0f1a] border border-slate-200 dark:border-white/10 shadow-2xl p-0 overflow-hidden">
+            <DialogHeader className="p-5 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
+              <DialogTitle className="text-lg font-black uppercase tracking-widest text-slate-900 dark:text-white">
                 Bộ Lọc Phân Loại
               </DialogTitle>
             </DialogHeader>
 
-            <div className="p-6 space-y-8 bg-background">
-              {/* Loại Asset (Nền tảng) */}
-              <div className="space-y-4">
+            {/* Đã thêm max-h-[60vh] và overflow-y-auto để chống tràn màn hình */}
+            <div className="p-6 space-y-6 bg-background max-h-[60vh] overflow-y-auto scrollbar-hide">
+              
+              {/* Thiết bị (Mobile / PC) */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  Nền Tảng Thiết Bị
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant={tempDevice === "all" ? "default" : "outline"} 
+                    onClick={() => setTempDevice("all")}
+                    className={`rounded-full px-5 h-9 font-bold text-xs uppercase tracking-widest transition-all ${
+                      tempDevice === "all" ? 'bg-yellow-500 text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                    }`}
+                  >
+                    Tất cả
+                  </Button>
+                  {['mobile', 'pc'].map(dev => (
+                    <Button
+                      key={dev}
+                      variant={tempDevice === dev ? "default" : "outline"}
+                      onClick={() => setTempDevice(dev)}
+                      className={`rounded-full px-5 h-9 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${
+                        tempDevice === dev ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-none shadow-md scale-105' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                      }`}
+                    >
+                      {DEVICE_ICONS[dev]} {dev}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mạng Xã Hội */}
+              <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                  Nền Tảng
+                  Mạng Xã Hội
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     variant={tempPlatform === "all" ? "default" : "outline"} 
                     onClick={() => setTempPlatform("all")}
-                    className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                    className={`rounded-full px-5 h-9 font-bold text-xs uppercase tracking-widest transition-all ${
                       tempPlatform === "all" ? 'bg-yellow-500 text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
                     }`}
                   >
@@ -252,7 +304,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                       key={plat}
                       variant={tempPlatform === plat ? "default" : "outline"}
                       onClick={() => setTempPlatform(plat)}
-                      className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${
+                      className={`rounded-full px-5 h-9 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${
                         tempPlatform === plat ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-none shadow-md scale-105' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
                       }`}
                     >
@@ -263,7 +315,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </div>
 
               {/* Chủ Đề */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                   Chủ Đề
@@ -272,7 +324,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                   <Button 
                     variant={tempTag === "all" ? "default" : "outline"} 
                     onClick={() => setTempTag("all")}
-                    className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                    className={`rounded-full px-5 h-9 font-bold text-xs uppercase tracking-widest transition-all ${
                       tempTag === "all" ? 'bg-yellow-500 text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
                     }`}
                   >
@@ -283,7 +335,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                       key={tag}
                       variant={tempTag === tag ? "default" : "outline"}
                       onClick={() => setTempTag(tag)}
-                      className={`rounded-full px-5 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                      className={`rounded-full px-4 h-9 font-bold text-xs uppercase tracking-widest transition-all ${
                         tempTag === tag ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
                       }`}
                     >
@@ -295,37 +347,37 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#0a0f1a] flex gap-4">
+            <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#0a0f1a] flex gap-3">
               <Button 
                 variant="outline" 
                 onClick={handleResetFilter}
-                className="flex-1 rounded-2xl h-12 font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-white/10 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300"
+                className="flex-1 rounded-2xl h-11 font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-white/10 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300"
               >
                 Reset Bộ Lọc
               </Button>
               <Button 
                 onClick={handleApplyFilter}
-                className="flex-1 rounded-2xl h-12 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs uppercase tracking-widest shadow-lg shadow-yellow-500/20"
+                className="flex-1 rounded-2xl h-11 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs uppercase tracking-widest shadow-lg shadow-yellow-500/20"
               >
                 Áp Dụng
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
-      </div>
 
-      {/* ========================================== */}
-      {/* POP-UP MODAL CHI TIẾT TÀI LIỆU             */}
-      {/* ========================================== */}
+      {/* POP-UP MODAL CHI TIẾT TÀI LIỆU */}
       {selectedTut && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
-          {/* Đã thu nhỏ xuống max-w-3xl và max-h-[85vh] để gọn gàng hơn */}
           <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
             
             <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-              <span className="bg-slate-900 dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                {PLATFORM_ICONS[selectedTut.type]} {selectedTut.type === "text" ? "Tài liệu" : selectedTut.type}
-              </span>
+              <div className="flex gap-2">
+                <span className="bg-slate-900 dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
+                  {DEVICE_ICONS[selectedTut.device?.toLowerCase() === "pc" ? "pc" : "mobile"]} {selectedTut.device}
+                </span>
+                <span className="bg-yellow-500 text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
+                  {PLATFORM_ICONS[selectedTut.type]} {selectedTut.type === "text" ? "Tài liệu" : selectedTut.type}
+                </span>
+              </div>
               <button onClick={() => setSelectedTut(null)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
                 <X className="w-6 h-6 text-slate-500" />
               </button>

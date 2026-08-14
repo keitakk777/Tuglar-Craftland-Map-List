@@ -11,7 +11,6 @@ import { CodeTutorial } from "./fetch-code";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// Icon MXH
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   youtube: <SiYoutube className="w-5 h-5 text-red-500" />,
   tiktok: <SiTiktok className="w-5 h-5 text-slate-900 dark:text-white" />,
@@ -19,10 +18,9 @@ const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   text: <FileText className="w-5 h-5 text-yellow-500" />,
 };
 
-// Icon Thiết Bị (PC / Mobile) dạng Solid màu đen
 const DEVICE_ICONS: Record<string, React.ReactNode> = {
-  pc: <Monitor className="w-4 h-4 text-black dark:text-black fill-current" />,
-  mobile: <Smartphone className="w-4 h-4 text-black dark:text-black fill-current" />,
+  pc: <Monitor className="w-4 h-4 text-black dark:text-white fill-current" />,
+  mobile: <Smartphone className="w-4 h-4 text-black dark:text-white fill-current" />,
 };
 
 const getYoutubeEmbedUrl = (url: string) => {
@@ -42,12 +40,10 @@ const getTiktokEmbedUrl = (url: string) => {
 export default function CodeClient({ initialData }: { initialData: CodeTutorial[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   
-  // State lọc thực tế đang áp dụng
   const [activePlatform, setActivePlatform] = useState("all");
   const [activeDevice, setActiveDevice] = useState("all");
   const [activeTag, setActiveTag] = useState("all");
 
-  // State tạm thời khi mở Dialog bộ lọc
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempPlatform, setTempPlatform] = useState("all");
   const [tempDevice, setTempDevice] = useState("all");
@@ -62,7 +58,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
     return Array.from(tags);
   }, [initialData]);
 
-  // Lọc data
   const filteredData = initialData.filter((tut) => {
     const matchesSearch = tut.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           tut.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -72,7 +67,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
     return matchesSearch && matchesPlatform && matchesDevice && matchesTag;
   });
 
-  // Đồng bộ temp state khi mở Dialog
   useEffect(() => {
     if (isFilterOpen) {
       setTempPlatform(activePlatform);
@@ -107,19 +101,16 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
   return (
     <div className="relative pb-24">
       
-      {/* HEADER */}
       <div className="mb-10 text-center">
-        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-4 uppercase tracking-tight">
+        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-4 uppercase tracking-tight leading-normal py-1">
           Thư Viện Code Craftland
         </h1>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-medium">
-          Tổng hợp các video hướng dẫn, logic If/Else và mẹo code xịn xò từ đội ngũ sáng tạo.
+          Tổng hợp các tài liệu hướng dẫn code Craftland dành cho cộng đồng.
         </p>
       </div>
 
-      {/* THANH TÌM KIẾM CƠ BẢN */}
       <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 sm:p-5 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
-        
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <Input 
@@ -159,14 +150,15 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
           Không tìm thấy tài liệu nào phù hợp.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        // ĐÃ SỬA THÀNH xl:grid-cols-4 ĐỂ HIỂN THỊ 4 CỘT TRÊN MÀN HÌNH LỚN
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredData.map((tut, index) => {
               const hasThumbnail = tut.thumbnail && !tut.thumbnail.includes("THIẾU ẢNH") && !tut.thumbnail.includes("ERROR");
               const deviceKey = tut.device?.toLowerCase() === "pc" ? "pc" : "mobile";
 
               return (
-                <motion.div key={tut.id} layout initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: (index % 3) * 0.1 }} onClick={() => setSelectedTut(tut)} className="group cursor-pointer h-full">
+                <motion.div key={tut.id} layout initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: (index % 4) * 0.1 }} onClick={() => setSelectedTut(tut)} className="group cursor-pointer h-full">
                   <Card className="relative overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-card/40 backdrop-blur-md flex flex-col transition-all duration-500 hover:border-yellow-500/50 hover:shadow-[0_0_20px_rgba(234,179,8,0.15)] rounded-3xl h-full p-0">
                     
                     <div className="relative w-full aspect-video bg-slate-100 dark:bg-slate-900 overflow-hidden p-2 flex items-center justify-center">
@@ -179,26 +171,31 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                         </div>
                       )}
                       
-                      {/* 🎯 HAI PILL GÓC TRÁI TRÊN */}
                       <div className="absolute top-4 left-4 flex gap-2 z-10">
-                        {/* Pill Thiết Bị */}
                         <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`Nền tảng: ${tut.device}`}>
                           {DEVICE_ICONS[deviceKey]}
                         </div>
-                        {/* Pill Mạng Xã Hội (Chỉ Icon) */}
                         <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`MXH: ${tut.type}`}>
                           {PLATFORM_ICONS[tut.type] || <FileText className="w-4 h-4 text-yellow-500" />}
                         </div>
                       </div>
                     </div>
                     
-                    <CardContent className="p-5 flex flex-col flex-1">
-                      <div className="flex flex-wrap gap-2 mb-3">
+                    {/* --- KHU VỰC BẠN TỰ CHỈNH KHOẢNG CÁCH & CỠ CHỮ --- */}
+                    {/* Giữ nguyên pt-0 ở CardContent */}
+                    <CardContent className="px-5 pb-5 pt-0 flex flex-col flex-1"> 
+                      
+                      {/* VŨ KHÍ Ở ĐÂY: Thêm -mt-2 hoặc -mt-3 để KÉO NGƯỢC hashtag lên sát ảnh */}
+                      <div className="flex flex-wrap gap-2 mb-2.5 -mt-2">
                         {tut.tags.map(tag => (
                           <span key={tag} className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 px-2.5 py-1 rounded-md">#{tag}</span>
                         ))}
                       </div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors line-clamp-2">{tut.title}</h3>
+
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors line-clamp-2">
+                        {tut.title}
+                      </h3>
+                      
                       <div className="flex-1 min-h-[8px]"></div>
                       <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-4 mt-auto">
                         <div className="flex items-center gap-2">
@@ -218,9 +215,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
         </div>
       )}
 
-      {/* ========================================== */}
-      {/* NÚT VÀNG NỔI & DIALOG BỘ LỌC ĐẦY ĐỦ        */}
-      {/* ========================================== */}
       <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-center gap-3">
         <AnimatePresence>
           {showScrollTop && (
@@ -249,10 +243,8 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </DialogTitle>
             </DialogHeader>
 
-            {/* Đã thêm max-h-[60vh] và overflow-y-auto để chống tràn màn hình */}
             <div className="p-6 space-y-6 bg-background max-h-[60vh] overflow-y-auto scrollbar-hide">
               
-              {/* Thiết bị (Mobile / PC) */}
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
@@ -283,7 +275,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                 </div>
               </div>
 
-              {/* Mạng Xã Hội */}
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
@@ -314,7 +305,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                 </div>
               </div>
 
-              {/* Chủ Đề */}
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -346,7 +336,6 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </div>
             </div>
 
-            {/* Footer Buttons */}
             <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#0a0f1a] flex gap-3">
               <Button 
                 variant="outline" 
@@ -363,8 +352,9 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </Button>
             </div>
           </DialogContent>
+        </Dialog>
+      </div>
 
-      {/* POP-UP MODAL CHI TIẾT TÀI LIỆU */}
       {selectedTut && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
           <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>

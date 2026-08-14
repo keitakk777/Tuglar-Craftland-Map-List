@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { getMapsData } from "../fetch-data"
+import { getMapsData } from "../fetch-map"
 
 import MapCover from "./map-cover"
 import MapActions from "./map-actions"

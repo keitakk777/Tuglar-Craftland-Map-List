@@ -174,7 +174,7 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                       </div>
                     </div>
                     
-                    <CardContent className="p-5 flex flex-col flex-1">
+                    <CardContent className="p-5 pt-0 flex flex-col flex-1">
                       <div className="flex flex-wrap gap-2 mb-3">
                         {tut.tags.map(tag => (
                           <span key={tag} className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 px-2.5 py-1 rounded-md">#{tag}</span>
@@ -319,8 +319,9 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
       {/* POP-UP MODAL CHI TIẾT TÀI LIỆU             */}
       {/* ========================================== */}
       {selectedTut && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
-          <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
+          {/* Đã thu nhỏ xuống max-w-3xl và max-h-[85vh] để gọn gàng hơn */}
+          <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
             
             <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
               <span className="bg-slate-900 dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
@@ -331,10 +332,10 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-8">
+            <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-6">
               
               <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight mb-4">{selectedTut.title}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-4">{selectedTut.title}</h2>
                 <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
                     <User className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
@@ -348,18 +349,18 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               </div>
 
               {selectedTut.description && (
-                <div className="bg-yellow-50 dark:bg-yellow-500/5 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-500/20 flex gap-4">
+                <div className="bg-yellow-50 dark:bg-yellow-500/5 p-5 rounded-2xl border border-yellow-200 dark:border-yellow-500/20 flex gap-4">
                   <AlignLeft className="w-6 h-6 text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
-                  <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{selectedTut.description}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{selectedTut.description}</p>
                 </div>
               )}
 
               {selectedTut.videoUrl && (getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)) && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-wide">
+                <div className="space-y-3">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-wide">
                     <Video className="w-5 h-5 text-red-500" /> Video Hướng dẫn
                   </h3>
-                  <div className={`w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-white/10 bg-black ${getYoutubeEmbedUrl(selectedTut.videoUrl) ? 'aspect-video' : 'aspect-[9/16] max-w-sm mx-auto'}`}>
+                  <div className={`w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-white/10 bg-black ${getYoutubeEmbedUrl(selectedTut.videoUrl) ? 'aspect-video' : 'aspect-[9/16] max-w-xs mx-auto'}`}>
                     <iframe 
                       width="100%" height="100%" 
                       src={getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)!} 
@@ -370,23 +371,24 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
               )}
 
               {selectedTut.facebookUrl && (
-                <div className="bg-blue-50 dark:bg-blue-950/20 p-8 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-6 mt-8">
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <SiFacebook className="w-12 h-12 text-[#0866FF] shrink-0" />
+                <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-4 mt-6">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <SiFacebook className="w-10 h-10 text-[#0866FF] shrink-0" />
                     <div>
-                      <h3 className="text-xl font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận từ cộng đồng.</p>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận.</p>
                     </div>
                   </div>
                   <Link 
                     href={selectedTut.facebookUrl} 
                     target="_blank"
-                    className="shrink-0 bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold py-3.5 px-6 rounded-xl flex items-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-blue-500/20"
+                    className="shrink-0 bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-transform hover:scale-105 shadow-md shadow-blue-500/20 text-sm"
                   >
                     Xem bài viết <ExternalLink className="w-4 h-4" />
                   </Link>
                 </div>
               )}
+
             </div>
           </div>
         </div>

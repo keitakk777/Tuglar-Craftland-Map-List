@@ -1,28 +1,28 @@
 // app/maps/fetch-banner.ts
 
 export interface Milestone {
-  dateStr: string;
+  date: string;
   label: string;
 }
 
-export interface EventBanner {
+export interface EventBannerData {
   id: string;
   tag: string;
   title: string;
   description: string;
-  imageUrl: string;
+  image: string;  // Lưu ý: Đã đổi thành 'image' thay vì 'imageUrl'
   status: string;
   prize: string;
   prizeUnit: string;
   participants: string;
-  dateRange: string;
+  date: string;  // Đã đổi thành 'date' thay vì 'dateRange'
   endTime: string;
   actionText: string;
   actionLink: string;
   milestones: Milestone[];
 }
 
-const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='20' font-weight='bold' fill='%2364748b' text-anchor='middle'%3ETHI%E1%BA%BEU%20%E1%BA%A2NH%20BANNER%3C/text%3E%3C/svg%3E";
+const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%23450a0a'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='20' font-weight='bold' fill='%23ef4444' text-anchor='middle'%3ETHI%E1%BA%BEU%20%E1%BA%A2NH%20BANNER%3C/text%3E%3C/svg%3E";
 
 export function getDirectImageUrl(rawUrl: string) {
   if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
@@ -46,15 +46,13 @@ function parseCSV(str: string) {
   return result;
 }
 
-export async function getBannerData(): Promise<EventBanner[]> {
+export async function getBannerData(): Promise<EventBannerData[]> {
   try {
-    // 🎯 Link Sheet Tab "Banner Web"
-    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv"; 
+    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=319803875&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { cache: 'no-store' });
     const csvText = await res.text();
     const rows = parseCSV(csvText);
-    
     if (rows.length < 2) return [];
 
     let headerIdx = -1;
@@ -67,7 +65,6 @@ export async function getBannerData(): Promise<EventBanner[]> {
     if (headerIdx === -1) headerIdx = 0;
 
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
-    
     const getIdx = (keys: string[]) => {
       for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
       for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
@@ -89,7 +86,7 @@ export async function getBannerData(): Promise<EventBanner[]> {
     const idxActionLink = getIdx(["action link", "link"]);
     const idxMilestones = getIdx(["milestones", "lộ trình"]);
 
-    const banners: EventBanner[] = [];
+    const banners: EventBannerData[] = [];
 
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i];
@@ -98,11 +95,10 @@ export async function getBannerData(): Promise<EventBanner[]> {
       let rawMilestones = idxMilestones >= 0 && row[idxMilestones] ? String(row[idxMilestones]) : "";
       let milestones: Milestone[] = [];
       if (rawMilestones) {
-        // Tách chuỗi lộ trình từ Sheet (VD: 5/5|Mở đơn; 26/5|Đóng đơn)
         const parts = rawMilestones.split(";");
         for (const p of parts) {
           const [d, l] = p.split("|");
-          if (d && l) milestones.push({ dateStr: d.trim(), label: l.trim() });
+          if (d && l) milestones.push({ date: d.trim(), label: l.trim() });
         }
       }
 
@@ -111,12 +107,12 @@ export async function getBannerData(): Promise<EventBanner[]> {
         tag: idxTag >= 0 && row[idxTag] ? String(row[idxTag]) : "Sự kiện",
         title: idxTitle >= 0 && row[idxTitle] ? String(row[idxTitle]) : "Chưa có tiêu đề",
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
-        imageUrl: idxImage >= 0 && row[idxImage] ? getDirectImageUrl(String(row[idxImage])) : ERROR_IMAGE,
+        image: idxImage >= 0 && row[idxImage] ? getDirectImageUrl(String(row[idxImage])) : ERROR_IMAGE,
         status: idxStatus >= 0 && row[idxStatus] ? String(row[idxStatus]) : "Đang diễn ra",
         prize: idxPrize >= 0 && row[idxPrize] ? String(row[idxPrize]) : "-",
         prizeUnit: idxPrizeUnit >= 0 && row[idxPrizeUnit] ? String(row[idxPrizeUnit]) : "",
         participants: idxParticipants >= 0 && row[idxParticipants] ? String(row[idxParticipants]) : "0",
-        dateRange: idxDateRange >= 0 && row[idxDateRange] ? String(row[idxDateRange]) : "-",
+        date: idxDateRange >= 0 && row[idxDateRange] ? String(row[idxDateRange]) : "-",
         endTime: idxEndTime >= 0 && row[idxEndTime] ? String(row[idxEndTime]) : "",
         actionText: idxActionText >= 0 && row[idxActionText] ? String(row[idxActionText]) : "Tham gia",
         actionLink: idxActionLink >= 0 && row[idxActionLink] ? String(row[idxActionLink]) : "#",

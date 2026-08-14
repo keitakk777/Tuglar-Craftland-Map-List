@@ -1,236 +1,163 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Users, Star, Play, ChevronRight, ChevronLeft, Copy, Check, Flame, Info } from "lucide-react"
-import { motion, useAnimation } from "framer-motion"
+// Fix 4: Đã thêm CheckCircle2 vào đây
+import { ArrowRight, Flame, Map as MapIcon, Users, Play, Copy, Star, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
+// Fix 1: Sửa getMapData thành getMapsData
+import { getMapsData, MapData } from "@/app/maps/fetch-map"
 
-// 🎯 BƯỚC 1: IMPORT KHO CHUNG - CHÌA KHÓA ĐỂ ĐỒNG BỘ 100%
-import { mapDetails } from "@/app/maps/data"
-
-const DIFFICULTY_MAP = {
+const DIFFICULTY_MAP: Record<number, string> = {
   1: "Siêu Dễ",
   2: "Dễ",
-  3: "Trung Bình",
+  3: "Bình Thường",
   4: "Khó",
   5: "Siêu Khó",
-  6: "Ác Mộng"
 }
 
-// 🎯 BƯỚC 2: TỰ ĐỘNG LỌC & CHUẨN HÓA DỮ LIỆU TỪ KHO CHUNG
-const FEATURED_LIST = Object.entries(mapDetails)
-  .map(([key, data]: [string, any]) => {
-    // Chuẩn hóa "1 người" thành "Solo" cho đồng bộ UI
-    const normalizedPlayers = data.teamType === "1 người" ? "Solo" : (data.teamType || "Tự do");
-    
-    return {
-      id: key, 
-      name: data.name,
-      type: data.mode || "Chưa phân loại",
-      players: normalizedPlayers,
-      favourite: data.likes || "0",
-      difficulty: data.difficulty || 3, // Lấy đúng số từ file lẻ của ní
-      shortCode: data.shortCode || "#000000",
-      image: data.banner || "/map-cover/Banner Chưa có.png", 
-      featured: data.featured || false
-    };
-  })
-  .filter(map => map.featured); // Chỉ lấy những map ní đánh dấu là nổi bật
-
 export function FeaturedMaps() {
-  const router = useRouter()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
-
-  const controlsLeft = useAnimation()
-  const controlsRight = useAnimation()
+  const [maps, setMaps] = useState<MapData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Fix 2: Khai báo rõ data có kiểu là MapData[]
+    getMapsData().then((data: MapData[]) => {
+      // Đảm bảo data tồn tại rồi mới slice 4 map đầu
+      const featured = data && data.length > 0 ? data.slice(0, 4) : [];
+      setMaps(featured);
+      setLoading(false);
+    });
+  }, []);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, clientWidth, scrollWidth } = scrollContainerRef.current
+  const handleCopy = (e: React.MouseEvent, code: string) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(code);
+    setCopiedId(code);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-      if (direction === 'left') {
-        if (scrollLeft <= 15) {
-          controlsLeft.start({
-            x: [0, -10, 10, -8, 8, -5, 5, 0],
-            transition: { duration: 0.4, ease: "easeInOut" }
-          })
-        } else {
-          scrollContainerRef.current.scrollTo({
-            left: scrollLeft - clientWidth / 2,
-            behavior: 'smooth'
-          })
-        }
-      } else {
-        if (Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 15) {
-          controlsRight.start({
-            x: [0, 10, -10, 8, -8, 5, -5, 0],
-            transition: { duration: 0.4, ease: "easeInOut" }
-          })
-        } else {
-          scrollContainerRef.current.scrollTo({
-            left: scrollLeft + clientWidth / 2,
-            behavior: 'smooth'
-          })
-        }
-      }
-    }
+  if (loading) {
+    return (
+      <section className="py-12 md:py-20 relative overflow-hidden">
+        <div className="container relative z-10 mx-auto px-4 animate-pulse">
+           <div className="flex items-center gap-3 mb-10">
+             <div className="w-12 h-12 rounded-full bg-slate-800"></div>
+             <div className="h-8 w-48 bg-slate-800 rounded-lg"></div>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-80 bg-slate-800 rounded-3xl"></div>
+              ))}
+           </div>
+        </div>
+      </section>
+    );
   }
 
-  const handleCopy = (e: React.MouseEvent, code: string, id: string) => {
-    e.stopPropagation() 
-    navigator.clipboard.writeText(code)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
-  }
-
-  const handlePlayNow = (e: React.MouseEvent, code: string) => {
-    e.stopPropagation() 
-    const cleanCode = code.replace("#", "")
-    window.open(`https://c.freefiremobile.com/?m=1E441${cleanCode}`, "_blank")
-  }
-
-  if (!mounted) return null
+  if (maps.length === 0) return null;
 
   return (
-    <section id="popular-maps" className="relative py-8 md:py-12 group select-none">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <Badge variant="outline" className="mb-3 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest">
-              Explore Maps
-            </Badge>
-            <h2 className="text-balance text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl uppercase">
-              Bản đồ nổi bật
-            </h2>
-            <p className="mt-2 text-muted-foreground md:text-lg">
-              Khám phá các bản đồ nổi bật nhất đến từ đội ngũ Tuglar Craftland
-            </p>
+    <section className="py-12 md:py-20 relative overflow-hidden">
+      
+      <div className="container relative z-10 mx-auto px-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 lg:mb-16">
+          <div className="flex items-center gap-3 md:gap-5">
+            <div className="relative">
+              <div className="absolute inset-0 bg-orange-500 blur-xl opacity-50 rounded-full" />
+              <div className="bg-gradient-to-br from-orange-400 to-orange-600 w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center relative shadow-lg transform -rotate-6">
+                <Flame className="w-6 h-6 md:w-8 md:h-8 text-white fill-white" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 uppercase tracking-tight">
+                Đang thịnh hành
+              </h2>
+              <p className="text-slate-400 mt-1 md:mt-2 font-medium text-sm md:text-base">
+                Những bản đồ được chơi nhiều nhất tuần qua
+              </p>
+            </div>
           </div>
-          <Button 
-            onClick={() => router.push('/maps')}
-            variant="ghost" 
-            className="gap-2 self-start md:self-auto font-bold uppercase text-xs tracking-widest hover:text-yellow-600 hover:bg-yellow-500/10 transition-colors"
-          >
-            Xem toàn bộ map
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+
+          <Link href="/maps">
+            <Button variant="outline" className="rounded-full font-bold uppercase tracking-wider text-xs border-white/10 hover:bg-white/5 h-12 px-6">
+              Xem tất cả <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
 
-        {/* --- CAROUSEL --- */}
-        <div className="relative">
-          
-          {/* Nút Điều Hướng */}
-          <div className="absolute -left-4 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 group-hover:-left-7 transition-all duration-500 hidden md:block">
-            <motion.button animate={controlsLeft} onClick={() => scroll('left')} className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer">
-              <ChevronLeft className="h-8 w-8" />
-            </motion.button>
-          </div>
-
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 group-hover:-right-7 transition-all duration-500 hidden md:block">
-            <motion.button animate={controlsRight} onClick={() => scroll('right')} className="h-14 w-14 rounded-full bg-yellow-500 text-black border border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] flex items-center justify-center hover:bg-yellow-600 transition-colors cursor-pointer">
-              <ChevronRight className="h-8 w-8" />
-            </motion.button>
-          </div>
-
-          <div 
-            ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 px-2 pt-2" 
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {FEATURED_LIST.map((map) => (
-              <div 
-                key={map.id} 
-                onClick={() => router.push(`/maps/${map.id}`)}
-                className="min-w-[85%] md:min-w-[45%] lg:min-w-[32%] shrink-0 snap-start block group/card cursor-pointer"
-              >
-                <Card className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-yellow-500/50 hover:shadow-2xl hover:shadow-yellow-500/10 rounded-3xl h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {maps.map((map, index) => (
+            <Link href={`/maps/${map.id}`} key={map.id}>
+              <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-white/5 hover:border-orange-500/50 transition-all duration-500 rounded-[2rem] flex flex-col h-full hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(249,115,22,0.2)]">
+                
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="absolute inset-0 bg-slate-900 animate-pulse" />
+                  <img
+                    src={map.thumbnail}
+                    alt={map.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
                   
-                  <div className="relative aspect-[485/220] overflow-hidden">
-                    <img 
-                      src={map.image} 
-                      alt={map.name} 
-                      draggable="false"
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover/card:scale-105 pointer-events-none" 
-                    />
-
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300">
-                          <Info className="h-4 w-4 text-white" />
-                          <span className="text-white text-[10px] font-bold uppercase tracking-widest">Xem chi tiết</span>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute left-3 top-3 z-10">
-                      <Badge variant="secondary" className="bg-black/60 text-white border-white/10 backdrop-blur-md text-[10px] font-medium uppercase">
-                        {map.type}
-                      </Badge>
-                    </div>
-
-                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-xs font-medium text-white border border-white/10">
-                      <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
-                      {map.favourite}
+                  <div className="absolute top-4 left-4">
+                    <div className="bg-orange-500 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                      <Star className="w-3 h-3 fill-current" /> TOP {index + 1}
                     </div>
                   </div>
+                </div>
 
-                  <CardContent className="p-5">
-                    <div className="flex flex-col gap-4">
-                      <div>
-                        <h3 className="text-lg font-bold tracking-tight flex items-center gap-1.5 group-hover/card:text-yellow-600 transition-colors uppercase">
-                          <Flame className="h-6 w-6 text-orange-500 fill-orange-500 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)] transition-all shrink-0" />
-                          {map.name}
-                        </h3>
-                        
-                        <div className="mt-1 flex items-center gap-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {map.players}
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {DIFFICULTY_MAP[map.difficulty as keyof typeof DIFFICULTY_MAP]}
-                          </span>
-                        </div>
-                      </div>
+                <CardContent className="relative p-6 pt-0 flex flex-col flex-grow z-10 -mt-6">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {/* Fix 3: Khai báo (tag: string) thay vì để trống */}
+                    {map.tags && map.tags.slice(0, 2).map((tag: string) => (
+                      <Badge key={tag} variant="secondary" className="bg-background/80 backdrop-blur-md border-white/10 text-[10px] font-bold uppercase tracking-wider px-3 py-1">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
 
-                      <div className="flex items-center gap-2">
-                          <Button 
-                            onClick={(e) => handlePlayNow(e, map.shortCode)}
-                            className="flex-1 h-10 bg-yellow-500 text-black hover:bg-yellow-600 font-black uppercase text-[11px] rounded-xl transition-all border-none shadow-md shadow-yellow-500/20"
-                          >
-                              <Play className="mr-2 h-3.5 w-3.5 fill-current" />
-                              Chơi
-                          </Button>
+                  <h3 className="font-black text-xl mb-3 line-clamp-2 text-white group-hover:text-orange-400 transition-colors">
+                    {map.name}
+                  </h3>
 
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={(e) => handleCopy(e, map.shortCode, map.id)}
-                            className="h-10 w-10 shrink-0 rounded-xl border-border/50 hover:border-yellow-500/50 hover:text-yellow-600 hover:bg-yellow-500/10 transition-all active:scale-90 bg-muted/30"
-                          >
-                            {copiedId === map.id ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground uppercase tracking-wider mt-auto mb-6">
+                    <span className="flex items-center gap-1.5">
+                      <MapIcon className="w-3.5 h-3.5 text-orange-500" />
+                      {map.mode}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                    <span className="flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-blue-400" />
+                      {map.players || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 relative z-20">
+                    <Button className="flex-1 rounded-xl h-12 bg-white text-black hover:bg-orange-500 hover:text-white font-black tracking-widest uppercase transition-colors">
+                      <Play className="w-4 h-4 mr-2 fill-current" /> Chơi
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="w-12 h-12 rounded-xl border-white/10 bg-background/50 hover:bg-white/10 shrink-0"
+                      onClick={(e) => handleCopy(e, map.code)}
+                    >
+                      {copiedId === map.code ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Copy className="w-5 h-5 text-slate-400" />
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

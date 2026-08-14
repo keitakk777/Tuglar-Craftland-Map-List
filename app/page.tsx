@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBannerData, EventBannerData } from "./maps/fetch-banner";
-import { EventBanner } from "@/components/event-banner";
+import { getBannerData, EventBannerData } from "./web-banner/fetch-banner";
+import { EventBanner } from "@/app/web-banner/event-banner";
 
 // Import các phần bên dưới trang chủ của bạn (Dựa theo ảnh bạn chụp)
 import { FeaturedMaps } from "@/components/featured-maps";

@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Play, FileText, User, Search, X, ExternalLink, Code2, RefreshCw } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Search, X, Code2, ExternalLink, Calendar, User, AlignLeft, Video, Filter, ChevronUp, FileText } from "lucide-react";
+import { SiYoutube, SiTiktok, SiFacebook } from "react-icons/si";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { CodeTutorial } from "./fetch-code";
 import Link from "next/link";
+// Import Dialog cho Bộ lọc nổi bật giữa màn hình
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// Biểu tượng cho từng MXH
-const platformIcons: Record<string, React.ReactNode> = {
-  youtube: <Play className="w-4 h-4 text-red-500 fill-current" />,
-  tiktok: <Play className="w-4 h-4 text-cyan-500 fill-current" />,
-  facebook: <Play className="w-4 h-4 text-blue-500 fill-current" />,
-  text: <FileText className="w-4 h-4 text-yellow-500" />
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  youtube: <SiYoutube className="w-5 h-5 text-red-500" />,
+  tiktok: <SiTiktok className="w-5 h-5 text-slate-900 dark:text-white" />,
+  facebook: <SiFacebook className="w-5 h-5 text-blue-500" />,
+  text: <FileText className="w-5 h-5 text-yellow-500" />,
 };
 
-// Hàm xử lý link YouTube
 const getYoutubeEmbedUrl = (url: string) => {
   if (!url) return null;
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&"'>]+)/);
@@ -21,27 +26,35 @@ const getYoutubeEmbedUrl = (url: string) => {
   return null;
 };
 
-// Hàm kiểm tra link text
-const isStandardLink = (url: string) => {
-  return url && url !== "Link" && url !== "#" && url !== "undefined" && url !== "nan" && url.startsWith("http");
+const getTiktokEmbedUrl = (url: string) => {
+  if (!url) return null;
+  const ttMatch = url.match(/tiktok\.com\/.*video\/(\d+)/);
+  if (ttMatch && ttMatch[1]) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
+  return null;
 };
 
 export default function CodeClient({ initialData }: { initialData: CodeTutorial[] }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activePlatform, setActivePlatform] = useState<string>("all");
-  const [activeTag, setActiveTag] = useState<string>("all");
-  const [selectedTut, setSelectedTut] = useState<CodeTutorial | null>(null);
+  
+  // State lọc thực tế đang áp dụng
+  const [activePlatform, setActivePlatform] = useState("all");
+  const [activeTag, setActiveTag] = useState("all");
 
-  // Tự động gom tất cả các tags hiện có từ dữ liệu
+  // State tạm thời khi mở Dialog bộ lọc
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tempPlatform, setTempPlatform] = useState("all");
+  const [tempTag, setTempTag] = useState("all");
+
+  const [selectedTut, setSelectedTut] = useState<CodeTutorial | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   const allAvailableTags = useMemo(() => {
     const tags = new Set<string>();
-    initialData.forEach(tut => {
-      tut.tags.forEach(t => { if (t) tags.add(t); });
-    });
+    initialData.forEach(tut => tut.tags.forEach(t => { if (t) tags.add(t); }));
     return Array.from(tags);
   }, [initialData]);
 
-  // Bộ lọc kết hợp 3 lớp (Search + Platform + Tag)
+  // Lọc data
   const filteredData = initialData.filter((tut) => {
     const matchesSearch = tut.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           tut.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -50,262 +63,334 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
     return matchesSearch && matchesPlatform && matchesTag;
   });
 
+  // Đồng bộ temp state khi mở Dialog
+  useEffect(() => {
+    if (isFilterOpen) {
+      setTempPlatform(activePlatform);
+      setTempTag(activeTag);
+    }
+  }, [isFilterOpen, activePlatform, activeTag]);
+
+  // Cuộn trang
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const handleApplyFilter = () => {
+    setActivePlatform(tempPlatform);
+    setActiveTag(tempTag);
+    setIsFilterOpen(false);
+  };
+
+  const handleResetFilter = () => {
+    setTempPlatform("all");
+    setTempTag("all");
+  };
+
+  const isFilterActive = activePlatform !== "all" || activeTag !== "all";
+
   return (
-    <>
+    <div className="relative pb-24">
+      
+      {/* HEADER */}
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-4">
-          THƯ VIỆN CODE CRAFTLAND
+        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-4 uppercase tracking-tight">
+          Thư Viện Code Craftland
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-medium">
           Tổng hợp các video hướng dẫn, logic If/Else và mẹo code xịn xò từ đội ngũ sáng tạo.
         </p>
       </div>
 
-{/* ========================================== */}
-      {/* TỔ HỢP BỘ LỌC CHUYÊN NGHIỆP               */}
-      {/* ========================================== */}
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl mb-10 flex flex-col gap-6">
+      {/* THANH TÌM KIẾM CƠ BẢN (NẰM NGANG TRÊN MÀN HÌNH) */}
+      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 sm:p-5 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm mb-12 flex flex-col md:flex-row gap-4 items-center justify-between">
         
-        {/* Hàng 1: Search & Nút Reset */}
-        <div className="flex gap-4 items-center">
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm theo tên bài viết hoặc thẻ tag..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-100 dark:bg-[#0a0f1a] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-yellow-500 transition-colors font-medium shadow-inner"
-            />
-          </div>
-          <button 
-            onClick={() => { setSearchQuery(""); setActivePlatform("all"); setActiveTag("all"); }}
-            className="flex-shrink-0 p-3.5 rounded-2xl bg-slate-100 dark:bg-[#0a0f1a] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10 transition-colors shadow-sm"
-            title="Làm mới bộ lọc"
-          >
-            <RefreshCw className="w-5 h-5" />
-          </button>
+        {/* Input Tìm kiếm */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input 
+            type="text" 
+            placeholder="Tìm kiếm theo tên bài viết hoặc thẻ tag..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 h-14 rounded-2xl bg-slate-100 dark:bg-[#0a0f1a] border-transparent focus:ring-yellow-500 shadow-inner text-base"
+          />
         </div>
 
-        {/* Hàng 2: Lọc Nền tảng (MXH bằng Icon) & Lọc Tag/Chủ đề */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-          
-          {/* Cụm Nền tảng (Chỉ hiển thị icon MXH để gọn gàng) */}
-          <div className="flex flex-col gap-2 w-full lg:w-auto">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-              Nền tảng mạng xã hội
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => setActivePlatform('all')} 
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activePlatform === 'all' 
-                    ? 'bg-yellow-500 text-black shadow-md shadow-yellow-500/20' 
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
-                }`}
-              >
-                Tất cả
-              </button>
-              {['youtube', 'tiktok', 'facebook'].map((plat) => (
-                <button
-                  key={plat}
-                  onClick={() => setActivePlatform(plat)}
-                  title={`Lọc theo ${plat}`}
-                  className={`p-2.5 rounded-xl transition-all flex items-center justify-center w-11 h-11 ${
-                    activePlatform === plat 
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-md scale-105' 
-                      : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {platformIcons[plat]} 
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cụm Chủ đề / Tag */}
-          <div className="flex flex-col gap-2 w-full lg:w-auto overflow-hidden">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              Chủ đề (Tags)
-            </span>
-            <div className="flex gap-2 overflow-x-auto w-full pb-2 scrollbar-hide">
-              <button 
-                onClick={() => setActiveTag('all')} 
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  activeTag === 'all' 
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-md' 
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
-                }`}
-              >
-                Tất cả chủ đề
-              </button>
-              {allAvailableTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => setActiveTag(tag)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                    activeTag === tag 
-                      ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/50 shadow-sm' 
-                      : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-transparent hover:bg-slate-200 dark:hover:bg-white/10'
-                  }`}
-                >
-                  #{tag}
-                </button>
-              ))}
-            </div>
-          </div>
-
+        {/* Cụm 3 nút MXH thao tác nhanh */}
+        <div className="flex gap-2 shrink-0 bg-slate-100 dark:bg-[#0a0f1a] p-1.5 rounded-2xl shadow-inner border border-slate-200 dark:border-white/5">
+          {['youtube', 'tiktok', 'facebook'].map((plat) => (
+            <Button
+              key={plat}
+              onClick={() => {
+                const newPlatform = activePlatform === plat ? 'all' : plat;
+                setActivePlatform(newPlatform);
+              }}
+              variant={activePlatform === plat ? "default" : "ghost"}
+              className={`w-12 h-11 rounded-xl p-0 transition-all ${
+                activePlatform === plat 
+                  ? 'bg-white dark:bg-white text-black shadow-md scale-105' 
+                  : 'hover:bg-white dark:hover:bg-white/10 text-slate-500'
+              }`}
+              title={plat.toUpperCase()}
+            >
+              {PLATFORM_ICONS[plat]}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Lưới Grid hiển thị */}
+      {/* LƯỚI GRID HIỂN THỊ */}
       {filteredData.length === 0 ? (
-        <div className="text-center py-20 text-slate-500">
-          Không tìm thấy bài viết nào phù hợp.
+        <div className="text-center py-20 text-slate-500 font-medium bg-slate-50 dark:bg-white/5 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
+          Không tìm thấy tài liệu nào phù hợp.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredData.map((tut) => {
-            const hasRealImage = tut.thumbnail && !tut.thumbnail.includes("placeholder") && !tut.thumbnail.includes("ERROR");
+          <AnimatePresence mode="popLayout">
+            {filteredData.map((tut, index) => {
+              const hasThumbnail = tut.thumbnail && !tut.thumbnail.includes("THIẾU ẢNH") && !tut.thumbnail.includes("ERROR");
 
-            return (
-              <div 
-                key={tut.id}
-                onClick={() => setSelectedTut(tut)}
-                className="group relative rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] overflow-hidden hover:border-yellow-500/50 hover:shadow-[0_0_20px_rgba(234,179,8,0.15)] transition-all cursor-pointer h-full flex flex-col"
-              >
-                {/* Thumbnail */}
-                <div className="aspect-video w-full overflow-hidden relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-2">
-                  {hasRealImage ? (
-                    <img src={tut.thumbnail} alt={tut.title} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />
-                  ) : null}
-
-                  {/* Ảnh mặc định (Fallback) */}
-                  <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 ${hasRealImage ? 'hidden' : 'flex'}`}>
-                    <Code2 className="w-12 h-12 text-slate-700 mb-2" />
-                    <span className="text-slate-500 font-mono text-xs px-6 text-center">{tut.title}</span>
-                  </div>
-                  
-                  {/* Huy hiệu Nền tảng */}
-                  <div className="absolute top-4 left-4 bg-white/95 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-slate-200 dark:border-white/10 shadow-sm z-10">
-                    {platformIcons[tut.type] || platformIcons['text']}
-                    <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider">{tut.type}</span>
-                  </div>
-                </div>
-
-                {/* Nội dung chữ */}
-                <div className="p-6 flex flex-col flex-grow">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {tut.tags.map(tag => (
-                      <span key={tag} className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 px-2 py-1 rounded-md">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 line-clamp-2 flex-grow leading-tight">{tut.title}</h3>
-                  
-                  {/* Tác giả */}
-                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-4 mt-auto">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              return (
+                <motion.div key={tut.id} layout initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: (index % 3) * 0.1 }} onClick={() => setSelectedTut(tut)} className="group cursor-pointer h-full">
+                  <Card className="relative overflow-hidden border-slate-200 dark:border-white/10 bg-white dark:bg-card/40 backdrop-blur-md flex flex-col transition-all duration-500 hover:border-yellow-500/50 hover:shadow-[0_0_20px_rgba(234,179,8,0.15)] rounded-3xl h-full p-0">
+                    
+                    <div className="relative w-full aspect-video bg-slate-100 dark:bg-slate-900 overflow-hidden p-2 flex items-center justify-center">
+                      {hasThumbnail ? (
+                        <img src={tut.thumbnail} alt={tut.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 rounded-t-3xl" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900">
+                          <Code2 className="w-10 h-10 text-slate-400 mb-2" />
+                          <span className="text-slate-400 text-xs font-mono line-clamp-1 px-4">{tut.title}</span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4 bg-white/95 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm z-10 border border-slate-200 dark:border-white/10">
+                        {PLATFORM_ICONS[tut.type] || <FileText className="w-4 h-4 text-yellow-500" />}
+                        <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider">{tut.type === "text" ? "Tài liệu" : tut.type}</span>
                       </div>
-                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                        <span className="text-slate-900 dark:text-white font-bold">{tut.author}</span>
-                      </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    
+                    <CardContent className="p-5 flex flex-col flex-1">
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {tut.tags.map(tag => (
+                          <span key={tag} className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 px-2.5 py-1 rounded-md">#{tag}</span>
+                        ))}
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors line-clamp-2">{tut.title}</h3>
+                      <div className="flex-1 min-h-[8px]"></div>
+                      <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/10 pt-4 mt-auto">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            <User className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{tut.author}</span>
+                        </div>
+                        <span className="text-xs text-slate-500 font-medium">{tut.date}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       )}
 
-      {/* POP-UP MODAL CHI TIẾT TÀI LIỆU */}
-      {selectedTut && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setSelectedTut(null)}
-        >
-          <div 
-            className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-200 dark:border-white/10 ring-1 ring-white/10"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header Modal */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-              <div className="flex items-center gap-3">
-                <span className="bg-yellow-500 text-black px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                  {platformIcons[selectedTut.type]} {selectedTut.type}
-                </span>
+      {/* ========================================== */}
+      {/* NÚT VÀNG NỔI & DIALOG BỘ LỌC ĐẦY ĐỦ        */}
+      {/* ========================================== */}
+      <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-center gap-3">
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.8 }} transition={{ duration: 0.2 }}>
+              <Button onClick={scrollToTop} variant="outline" size="icon" className="h-12 w-12 rounded-full bg-background/80 backdrop-blur-md shadow-lg border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-transform hover:scale-110">
+                <ChevronUp size={24} />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <DialogTrigger asChild>
+            <Button className="h-14 w-14 md:h-16 md:w-16 rounded-full shadow-[0_10px_40px_rgba(234,179,8,0.4)] bg-yellow-500 hover:bg-yellow-600 text-black border border-yellow-400 hover:scale-110 transition-transform relative">
+              <Filter size={24} className="md:w-7 md:h-7" />
+              {isFilterActive && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+              )}
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-lg rounded-3xl bg-white dark:bg-[#0a0f1a] border border-slate-200 dark:border-white/10 shadow-2xl p-0 overflow-hidden">
+            <DialogHeader className="p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5">
+              <DialogTitle className="text-xl font-black uppercase tracking-widest text-slate-900 dark:text-white">
+                Bộ Lọc Phân Loại
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="p-6 space-y-8 bg-background">
+              {/* Loại Asset (Nền tảng) */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  Nền Tảng
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button 
+                    variant={tempPlatform === "all" ? "default" : "outline"} 
+                    onClick={() => setTempPlatform("all")}
+                    className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                      tempPlatform === "all" ? 'bg-yellow-500 text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                    }`}
+                  >
+                    Tất cả
+                  </Button>
+                  {['youtube', 'tiktok', 'facebook'].map(plat => (
+                    <Button
+                      key={plat}
+                      variant={tempPlatform === plat ? "default" : "outline"}
+                      onClick={() => setTempPlatform(plat)}
+                      className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${
+                        tempPlatform === plat ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-none shadow-md scale-105' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                      }`}
+                    >
+                      {PLATFORM_ICONS[plat]} {plat}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              {/* Chủ Đề */}
+              <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Chủ Đề
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant={tempTag === "all" ? "default" : "outline"} 
+                    onClick={() => setTempTag("all")}
+                    className={`rounded-full px-6 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                      tempTag === "all" ? 'bg-yellow-500 text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                    }`}
+                  >
+                    Tất cả
+                  </Button>
+                  {allAvailableTags.map(tag => (
+                    <Button
+                      key={tag}
+                      variant={tempTag === tag ? "default" : "outline"}
+                      onClick={() => setTempTag(tag)}
+                      className={`rounded-full px-5 h-10 font-bold text-xs uppercase tracking-widest transition-all ${
+                        tempTag === tag ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-none shadow-md' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'
+                      }`}
+                    >
+                      {tag}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#0a0f1a] flex gap-4">
+              <Button 
+                variant="outline" 
+                onClick={handleResetFilter}
+                className="flex-1 rounded-2xl h-12 font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-white/10 bg-white dark:bg-transparent text-slate-700 dark:text-slate-300"
+              >
+                Reset Bộ Lọc
+              </Button>
+              <Button 
+                onClick={handleApplyFilter}
+                className="flex-1 rounded-2xl h-12 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs uppercase tracking-widest shadow-lg shadow-yellow-500/20"
+              >
+                Áp Dụng
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* ========================================== */}
+      {/* POP-UP MODAL CHI TIẾT TÀI LIỆU             */}
+      {/* ========================================== */}
+      {selectedTut && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
+          <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
+            
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+              <span className="bg-slate-900 dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
+                {PLATFORM_ICONS[selectedTut.type]} {selectedTut.type === "text" ? "Tài liệu" : selectedTut.type}
+              </span>
               <button onClick={() => setSelectedTut(null)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
-                <X className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+                <X className="w-6 h-6 text-slate-500" />
               </button>
             </div>
 
-            {/* Nội dung cuộn được */}
             <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-8">
               
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-                {selectedTut.title}
-              </h2>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight mb-4">{selectedTut.title}</h2>
+                <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
+                    <User className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                    <span className="text-slate-900 dark:text-white font-bold">{selectedTut.author}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
+                    <Calendar className="w-4 h-4 text-blue-500" />
+                    <span>{selectedTut.date}</span>
+                  </div>
+                </div>
+              </div>
 
-              {/* KHU VỰC VIDEO YOUTUBE (NẾU CÓ) */}
-              {getYoutubeEmbedUrl(selectedTut.url) && (
-                <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-white/10 bg-black">
-                  <iframe width="100%" height="100%" src={getYoutubeEmbedUrl(selectedTut.url)!} title="YouTube video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+              {selectedTut.description && (
+                <div className="bg-yellow-50 dark:bg-yellow-500/5 p-6 rounded-2xl border border-yellow-200 dark:border-yellow-500/20 flex gap-4">
+                  <AlignLeft className="w-6 h-6 text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
+                  <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{selectedTut.description}</p>
                 </div>
               )}
 
-              {/* KHU VỰC HƯỚNG DẪN CHI TIẾT (LẤY TỪ LINK TEXT/FACEBOOK/TIKTOK) */}
-              <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-6 border border-slate-200 dark:border-white/10">
-                <div className="flex items-center gap-3 mb-4 border-b border-slate-200 dark:border-white/10 pb-4">
-                  <FileText className="w-5 h-5 text-yellow-500" />
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Hướng dẫn chi tiết & Liên kết</h3>
-                </div>
-                
-                {isStandardLink(selectedTut.url) ? (
-                  <div className="flex flex-col gap-4">
-                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                      Tài liệu này được liên kết tới một nền tảng bên ngoài. Vui lòng bấm vào nút bên dưới để truy cập trực tiếp.
-                    </p>
-                    <Link 
-                      href={selectedTut.url} 
-                      target="_blank"
-                      className="bg-slate-900 dark:bg-white text-white dark:text-black font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 w-max transition-transform hover:scale-105 shadow-md"
-                    >
-                      Truy cập Liên kết gốc <ExternalLink className="w-4 h-4" />
-                    </Link>
+              {selectedTut.videoUrl && (getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)) && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-wide">
+                    <Video className="w-5 h-5 text-red-500" /> Video Hướng dẫn
+                  </h3>
+                  <div className={`w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-white/10 bg-black ${getYoutubeEmbedUrl(selectedTut.videoUrl) ? 'aspect-video' : 'aspect-[9/16] max-w-sm mx-auto'}`}>
+                    <iframe 
+                      width="100%" height="100%" 
+                      src={getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)!} 
+                      frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen>
+                    </iframe>
                   </div>
-                ) : (
-                  <div className="prose dark:prose-invert prose-slate max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-medium">
-                    {/* Nếu data Link là dạng văn bản thường (không phải http) thì in thẳng ra đây */}
-                    {selectedTut.url && selectedTut.url !== "Link" ? selectedTut.url : "Tác giả chưa cập nhật nội dung hướng dẫn chi tiết cho phần này."}
+                </div>
+              )}
+
+              {selectedTut.facebookUrl && (
+                <div className="bg-blue-50 dark:bg-blue-950/20 p-8 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-6 mt-8">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <SiFacebook className="w-12 h-12 text-[#0866FF] shrink-0" />
+                    <div>
+                      <h3 className="text-xl font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận từ cộng đồng.</p>
+                    </div>
                   </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Footer Modal */}
-            <div className="p-6 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0a0f1a] flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-yellow-500 flex items-center justify-center">
-                  <User className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+                  <Link 
+                    href={selectedTut.facebookUrl} 
+                    target="_blank"
+                    className="shrink-0 bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold py-3.5 px-6 rounded-xl flex items-center gap-2 transition-transform hover:scale-105 shadow-lg shadow-blue-500/20"
+                  >
+                    Xem bài viết <ExternalLink className="w-4 h-4" />
+                  </Link>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Người hướng dẫn</p>
-                  <p className="font-black text-lg text-slate-900 dark:text-white">{selectedTut.author}</p>
-                </div>
-              </div>
+              )}
             </div>
-
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

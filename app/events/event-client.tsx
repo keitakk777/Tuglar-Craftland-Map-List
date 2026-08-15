@@ -1,4 +1,3 @@
-// app/events/event-client.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -50,13 +49,22 @@ const CountdownTimer = ({ targetDate }: { targetDate?: string }) => {
   return <span className="tabular-nums whitespace-nowrap">{timeLeft}</span>; 
 };
 
-const parseDateStr = (str: string) => {
-    let dStr = str;
+// Hàm xử lý "chống chết" khi ngày tháng nhập từ Google Sheet có ký tự lạ
+const parseDateStr = (str: string, fallbackYear: number) => {
+    let dStr = str || "";
     if (dStr.includes('-')) dStr = dStr.split('-')[0].trim();
     if (dStr.includes(' ')) dStr = dStr.split(' ').pop() || dStr;
     dStr = dStr.trim();
+    
+    // Loại bỏ các chữ cái (VD: 23h59)
+    dStr = dStr.replace(/[a-zA-Z]/g, '');
+
     const parts = dStr.split('/');
-    if (parts.length >= 2) return new Date(new Date().getFullYear(), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    if (parts.length >= 2) {
+        const day = parseInt(parts[0]) || 1;
+        const month = parseInt(parts[1]) || 1;
+        return new Date(fallbackYear, month - 1, day);
+    }
     return new Date();
 };
 
@@ -75,10 +83,13 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
       setProgressWidth("0%"); setPassedNodes([]); return;
     }
     const calculateProgress = () => {
-      const currTime = new Date().getTime();
+      const current = new Date();
+      const currTime = current.getTime();
+      const eventYear = activeEvent.endTime ? new Date(activeEvent.endTime.replace(" ", "T")).getFullYear() || current.getFullYear() : current.getFullYear();
+      
       const totalNodes = activeEvent.milestones.length;
       const parsed = activeEvent.milestones.map((ms, index) => ({
-        start: parseDateStr(ms.date).getTime(),
+        start: parseDateStr(ms.date, eventYear).getTime(),
         percent: totalNodes > 1 ? (index / (totalNodes - 1)) * 100 : 100
       }));
       setPassedNodes(parsed.map(p => currTime >= p.start));
@@ -103,7 +114,6 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-500/10 via-background to-background" />
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-20" />
       
-      {/* 🚀 KHOẢNG CÁCH DƯỚI HEADER CHUẨN */}
       <div className="container relative mx-auto px-4 pb-12 pt-28 md:pt-36">
         
         <div className="block lg:hidden mb-5 text-center">

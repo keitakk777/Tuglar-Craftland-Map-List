@@ -9,9 +9,10 @@ export interface CodeTutorial {
   description: string;
   thumbnail: string;
   facebookUrl: string;
+  tiktokUrl: string;   // <-- BỔ SUNG CỘT TIKTOK
   videoUrl: string;
-  type: string;        // Mạng Xã Hội (youtube, tiktok, facebook, text)
-  device: string;      // Nền tảng thiết bị (Mobile, PC) <-- BỔ SUNG MỚI
+  type: string;        
+  device: string;      
   status: string;
 }
 
@@ -39,17 +40,35 @@ function getAutoThumbnail(videoUrl: string, platform: string, currentThumb: stri
   return ERROR_IMAGE;
 }
 
+// Nâng cấp bộ đọc CSV
 function parseCSV(str: string) {
+  let delimiter = ",";
+  const firstLine = str.split('\n')[0] || "";
+  if (firstLine.indexOf('\t') > 0) delimiter = '\t';
+  else if ((firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length) delimiter = ';';
+
   const result = []; let row = []; let inQuotes = false; let val = "";
   for (let i = 0; i < str.length; i++) {
     let char = str[i];
     if (char === '"') { if (inQuotes && str[i + 1] === '"') { val += '"'; i++; } else inQuotes = !inQuotes; }
-    else if (char === "," && !inQuotes) { row.push(val.trim()); val = ""; }
+    else if (char === delimiter && !inQuotes) { row.push(val.trim()); val = ""; }
     else if ((char === "\n" || char === "\r") && !inQuotes) { if (char === "\r" && str[i+1] === "\n") i++; row.push(val.trim()); result.push(row); row = []; val = ""; }
     else val += char;
   }
   if (val || row.length > 0) { row.push(val.trim()); result.push(row); }
   return result;
+}
+
+function getSortTime(dateStr: string) {
+  if (!dateStr || dateStr.toLowerCase() === "cập nhật gần đây") return 0;
+  const parts = dateStr.trim().split("/");
+  if (parts.length >= 3) {
+    const day = parseInt(parts[0], 10) || 1;
+    const month = parseInt(parts[1], 10) || 1;
+    const year = parseInt(parts[2], 10) || 2024;
+    return new Date(year, month - 1, day).getTime();
+  }
+  return new Date(dateStr).getTime() || 0;
 }
 
 export async function getCodeTutorials(): Promise<CodeTutorial[]> {
@@ -63,13 +82,13 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
     if (rows.length < 2) return [];
 
     let headerIdx = -1;
-    for (let i = 0; i < Math.min(3, rows.length); i++) {
-      if (rows[i].join("").toLowerCase().includes("creator")) {
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      if (rows[i].join("").toLowerCase().includes("creator") || rows[i].join("").toLowerCase().includes("name")) {
         headerIdx = i;
         break;
       }
     }
-    if (headerIdx === -1) headerIdx = 0;
+    if (headerIdx === -1) headerIdx = 1; 
 
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
     
@@ -79,16 +98,17 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
       return -1;
     };
 
-    const idxId = getIdx(["stt"]);
+    const idxId = getIdx(["stt", "id"]);
     const idxDate = getIdx(["ngày", "date"]);
-    const idxDevice = getIdx(["nền tảng", "device"]); // <-- Đọc cột Nền tảng thiết bị mới
+    const idxDevice = getIdx(["nền tảng", "device"]); 
     const idxCreator = getIdx(["creator", "tác giả"]);
-    const idxTags = getIdx(["tags"]);
+    const idxTags = getIdx(["tags", "thẻ"]);
     const idxName = getIdx(["name", "tên"]);
     const idxDesc = getIdx(["mô tả", "description"]);
     const idxThumb = getIdx(["thumbnail", "preview", "ảnh"]);
     const idxFb = getIdx(["facebook"]);
-    const idxVid = getIdx(["yt hoặc tiktok", "youtube", "tiktok", "video"]);
+    const idxTiktok = getIdx(["tiktok"]); // <-- Tìm vị trí cột Tiktok
+    const idxVid = getIdx(["yt hoặc tiktok", "youtube", "video", "yt"]); 
     const idxStatus = getIdx(["trạng thái", "status"]);
 
     const tutorials: CodeTutorial[] = [];
@@ -97,19 +117,21 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
       const row = rows[i];
       if (!row || row.length < 3) continue;
 
-      let status = idxStatus >= 0 && row[idxStatus] ? String(row[idxStatus]).trim().toLowerCase() : "";
-      if (!status.includes("hiện")) continue;
+      let status = idxStatus >= 0 && row[idxStatus] ? String(row[idxStatus]).trim().toLowerCase() : "hiện";
+      if (status !== "" && status !== "hiện") continue;
 
       let rawTags = idxTags >= 0 && row[idxTags] ? String(row[idxTags]) : "";
       let tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
 
       let fbLink = idxFb >= 0 && row[idxFb] ? String(row[idxFb]).trim() : "";
+      // Đọc link Tiktok riêng
+      let ttLink = idxTiktok >= 0 && row[idxTiktok] ? String(row[idxTiktok]).trim() : "";
       let vidLink = idxVid >= 0 && row[idxVid] ? String(row[idxVid]).trim() : "";
       
       let platformType = "text";
       if (vidLink.toLowerCase().includes("youtube") || vidLink.toLowerCase().includes("youtu.be")) {
         platformType = "youtube";
-      } else if (vidLink.toLowerCase().includes("tiktok")) {
+      } else if (vidLink.toLowerCase().includes("tiktok") || ttLink !== "") {
         platformType = "tiktok";
       } else if (fbLink !== "") {
         platformType = "facebook";
@@ -119,9 +141,8 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
       if (!rawTitle) continue;
 
       let rawThumb = idxThumb >= 0 && row[idxThumb] ? String(row[idxThumb]).trim() : "";
-      let finalThumbnail = getAutoThumbnail(vidLink, platformType, rawThumb);
+      let finalThumbnail = getAutoThumbnail(vidLink || ttLink, platformType, rawThumb);
 
-      // 🎯 Xử lý cột Nền tảng Thiết bị (Mặc định là Mobile nếu không điền)
       let deviceType = idxDevice >= 0 && row[idxDevice] ? String(row[idxDevice]).trim() : "Mobile";
 
       tutorials.push({
@@ -133,14 +154,20 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         thumbnail: finalThumbnail,
         facebookUrl: fbLink,
+        tiktokUrl: ttLink, // <-- Thêm vào mảng data
         videoUrl: vidLink,
         type: platformType,
-        device: deviceType, // <-- Đẩy dữ liệu vào
+        device: deviceType, 
         status: "Hiện"
       });
     }
 
-    console.log("=> Lấy thành công:", tutorials.length, "bài Code.");
+    tutorials.sort((a, b) => {
+      const timeA = getSortTime(a.date);
+      const timeB = getSortTime(b.date);
+      return timeB - timeA;
+    });
+
     return tutorials;
   } catch (error) {
     console.error("Lỗi khi lấy data CODE:", error);

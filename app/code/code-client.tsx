@@ -411,24 +411,45 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                 </div>
               )}
 
-              {selectedTut.facebookUrl && (
-                <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-4 mt-6">
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <SiFacebook className="w-10 h-10 text-[#0866FF] shrink-0" />
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận.</p>
+              {/* ---------- START KHU VỰC NÚT BẤM FB & TIKTOK ---------- */}
+                <div className="flex flex-col gap-4 w-full">
+                  {selectedTut.facebookUrl && (
+                    <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <SiFacebook className="w-10 h-10 text-[#0866FF] shrink-0" />
+                        <div>
+                          <h3 className="text-lg font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận.</p>
+                        </div>
+                      </div>
+                      <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer">
+                        <Button className="bg-[#0866FF] hover:bg-[#0866FF]/90 text-white font-bold rounded-xl h-12 px-6 shadow-lg shadow-blue-500/20">
+                          Xem bài viết <ExternalLink className="ml-2 w-4 h-4" />
+                        </Button>
+                      </a>
                     </div>
-                  </div>
-                  <Link 
-                    href={selectedTut.facebookUrl} 
-                    target="_blank"
-                    className="shrink-0 bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-transform hover:scale-105 shadow-md shadow-blue-500/20 text-sm"
-                  >
-                    Xem bài viết <ExternalLink className="w-4 h-4" />
-                  </Link>
+                  )}
+
+                  {selectedTut.tiktokUrl && (
+                    <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center shrink-0">
+                           <SiTiktok className="w-6 h-6 text-white dark:text-black" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-slate-900 dark:text-white">Xem video trên TikTok</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Xem video hướng dẫn trực quan trên nền tảng TikTok.</p>
+                        </div>
+                      </div>
+                      <a href={selectedTut.tiktokUrl} target="_blank" rel="noopener noreferrer">
+                        <Button className="bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white font-bold rounded-xl h-12 px-6 shadow-lg">
+                          Xem Video <ExternalLink className="ml-2 w-4 h-4" />
+                        </Button>
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
+                {/* ---------- END KHU VỰC NÚT BẤM FB & TIKTOK ---------- */}
 
             </div>
           </div>

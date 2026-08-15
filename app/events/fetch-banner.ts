@@ -33,7 +33,6 @@ export function getDirectImageUrl(rawUrl: string) {
   return rawUrl;
 }
 
-// Bộ phân tích CSV nâng cấp: Tự nhận diện Tab, Phẩy (,) và Chấm Phẩy (;)
 function parseCSV(str: string) {
   let delimiter = ",";
   const firstLine = str.split('\n')[0] || "";
@@ -54,16 +53,13 @@ function parseCSV(str: string) {
 
 export async function getBannerData(): Promise<EventBannerData[]> {
   try {
-    // 🎯 Link Sheet Tab "Banner Web" (Đã thay ID mới nhất của bạn)
-    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv"; 
+    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { cache: 'no-store' });
     const csvText = await res.text();
 
-    // Rào chắn bảo mật chặn HTML
-    const textLower = csvText.toLowerCase();
-    if (textLower.includes("<html") || textLower.includes("<!doctype") || textLower.includes("<body")) {
-      console.error("LỖI: Link đang trả về trang web HTML, hãy kiểm tra lại quyền 'Xuất bản lên web (CSV)' của tab này.");
+    if (csvText.toLowerCase().includes("<html") || csvText.toLowerCase().includes("<!doctype")) {
+      console.error("LỖI: Link đang trả về trang web HTML. Hãy kiểm tra lại publish.");
       return [];
     }
 
@@ -71,38 +67,42 @@ export async function getBannerData(): Promise<EventBannerData[]> {
     if (rows.length < 2) return [];
 
     let headerIdx = -1;
+    
+    // ĐIỂM SỬA CHỮA CHÍNH TẠI ĐÂY: 
+    // Bắt buộc dòng tiêu đề phải có chữ 'title' VÀ 'status' để tránh bị nhận diện nhầm dòng "Banner Web" bị gộp ô
     for (let i = 0; i < Math.min(5, rows.length); i++) {
       const rowString = rows[i].join("").toLowerCase();
-      if (rowString.includes("title") || rowString.includes("tên") || rowString.includes("tiêu đề") || rowString.includes("banner")) {
+      if ((rowString.includes("title") || rowString.includes("tiêu đề")) && 
+          (rowString.includes("status") || rowString.includes("tag") || rowString.includes("trạng thái"))) {
         headerIdx = i;
         break;
       }
     }
-    if (headerIdx === -1) headerIdx = 0;
+    
+    // Nếu vẫn không thấy, ta lấy luôn dòng số 2 (index = 1) vì dòng 1 của bạn bị gộp ô
+    if (headerIdx === -1) headerIdx = 1;
 
     const headers = rows[headerIdx].map((h: string) => h.toLowerCase().trim());
-    
     const getIdx = (keys: string[]) => {
       for (const key of keys) { const found = headers.findIndex(h => h === key); if (found !== -1) return found; }
       for (const key of keys) { const found = headers.findIndex(h => h.includes(key)); if (found !== -1) return found; }
       return -1;
     };
 
-    // Quét rộng các từ khóa Tiếng Việt
     const idxId = getIdx(["id", "stt"]);
-    const idxTag = getIdx(["tag", "thẻ", "loại"]);
+    const idxTag = getIdx(["tag", "thẻ"]);
     const idxTitle = getIdx(["title", "tên", "tiêu đề"]);
-    const idxDesc = getIdx(["description", "mô tả", "nội dung"]);
-    const idxImage = getIdx(["convert", "banner", "ảnh", "hình", "image"]);
-    const idxStatus = getIdx(["status", "trạng thái", "tình trạng"]);
-    const idxPrize = getIdx(["prize", "giải", "phần thưởng"]);
+    const idxDesc = getIdx(["description", "mô tả"]);
+    const idxImage = getIdx(["convert", "banner", "ảnh", "hình"]);
+    const idxStatus = getIdx(["status", "trạng thái"]);
+    const idxPrize = getIdx(["prize", "giải"]);
     const idxPrizeUnit = getIdx(["unit", "đơn vị"]);
-    const idxParticipants = getIdx(["participants", "người", "tham gia"]);
-    const idxDateRange = getIdx(["date", "thời gian", "ngày"]);
-    const idxEndTime = getIdx(["end", "hạn", "kết thúc"]);
-    const idxActionText = getIdx(["text", "nút", "chữ"]);
-    const idxActionLink = getIdx(["link", "url", "đường dẫn"]);
-    const idxMilestones = getIdx(["milestones", "lộ trình", "tiến độ"]);
+    const idxParticipants = getIdx(["participants", "người tham gia"]);
+    const idxDateRange = getIdx(["date", "thời gian"]);
+    const idxEndTime = getIdx(["end", "hạn"]);
+    const idxActionText = getIdx(["action text", "nút"]);
+    const idxActionLink = getIdx(["action link", "link"]);
+    const idxMilestones = getIdx(["milestones", "lộ trình"]);
 
     const banners: EventBannerData[] = [];
 
@@ -122,8 +122,8 @@ export async function getBannerData(): Promise<EventBannerData[]> {
         }
       }
 
-      // Kiểm tra có tiêu đề không mới hiển thị (Lọc dòng trống rác)
       const title = idxTitle >= 0 && row[idxTitle] ? String(row[idxTitle]).trim() : "";
+      // Nếu dòng này không có Title, bỏ qua (để lọc các dòng trống dưới cùng của sheet)
       if (!title) continue;
 
       banners.push({

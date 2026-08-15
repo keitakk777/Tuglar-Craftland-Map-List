@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBannerData, EventBannerData } from "./web-banner/fetch-banner";
-import { EventBanner } from "@/app/web-banner/event-banner";
-
-// Import các phần bên dưới trang chủ của bạn (Dựa theo ảnh bạn chụp)
-import { FeaturedMaps } from "@/components/featured-maps";
-// import { NewsFeed } from "@/components/news-feed"; 
+import { getBannerData, EventBannerData } from "./events/fetch-banner";
+import { EventClient } from "./events/event-client";
 
 export default function HomePage() {
   const [banners, setBanners] = useState<EventBannerData[]>([]);
@@ -26,19 +22,14 @@ export default function HomePage() {
       {/* Background base */}
       <div className="fixed inset-0 bg-background -z-10" />
       
-      {/* KHU VỰC EVENT BANNER */}
+      {/* GIAO DIỆN SỰ KIỆN */}
       {loading ? (
          <div className="w-full pt-32 pb-20 flex items-center justify-center animate-pulse min-h-[500px]">
            <p className="text-slate-500">Đang tải sự kiện...</p>
          </div>
       ) : banners.length > 0 ? (
-         <EventBanner events={banners} />
+         <EventClient events={banners} />
       ) : null}
-
-      {/* CÁC THÀNH PHẦN BÊN DƯỚI (MAPS, NEWS) */}
-      <div className="container mx-auto px-4 mt-8">
-         <FeaturedMaps />
-      </div>
 
     </main>
   );

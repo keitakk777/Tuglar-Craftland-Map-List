@@ -1,4 +1,4 @@
-// app/maps/fetch-banner.ts
+// app/events/fetch-banner.ts
 
 export interface Milestone {
   date: string;
@@ -10,12 +10,12 @@ export interface EventBannerData {
   tag: string;
   title: string;
   description: string;
-  image: string;  // Lưu ý: Đã đổi thành 'image' thay vì 'imageUrl'
+  image: string;
   status: string;
   prize: string;
   prizeUnit: string;
   participants: string;
-  date: string;  // Đã đổi thành 'date' thay vì 'dateRange'
+  date: string;
   endTime: string;
   actionText: string;
   actionLink: string;
@@ -48,6 +48,7 @@ function parseCSV(str: string) {
 
 export async function getBannerData(): Promise<EventBannerData[]> {
   try {
+    // 🎯 Link Sheet Tab "Banner Web"
     const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=319803875&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { cache: 'no-store' });

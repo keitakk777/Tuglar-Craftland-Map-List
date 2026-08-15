@@ -171,14 +171,8 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                         </div>
                       )}
                       
-                      <div className="absolute top-4 left-4 flex gap-2 z-10">
-                        <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`Nền tảng: ${tut.device}`}>
-                          {DEVICE_ICONS[deviceKey]}
-                        </div>
-                        <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10" title={`MXH: ${tut.type}`}>
-                          {PLATFORM_ICONS[tut.type] || <FileText className="w-4 h-4 text-yellow-500" />}
-                        </div>
-                      </div>
+                      {/* Đã xóa khối absolute chứa icon nổi trên ảnh */}
+                      
                     </div>
                     
                     {/* --- KHU VỰC BẠN TỰ CHỈNH KHOẢNG CÁCH & CỠ CHỮ --- */}
@@ -192,8 +186,12 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                         ))}
                       </div>
 
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors line-clamp-2">
-                        {tut.title}
+                      {/* Đã thêm icon nằm trực tiếp cạnh Tiêu đề */}
+                      <h3 className="flex items-start gap-2 text-base font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-500 transition-colors">
+                        <span className="shrink-0 mt-[3px] text-slate-700 dark:text-slate-300">
+                           {DEVICE_ICONS[deviceKey]}
+                        </span>
+                        <span className="line-clamp-2">{tut.title}</span>
                       </h3>
                       
                       <div className="flex-1 min-h-[8px]"></div>
@@ -359,15 +357,8 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
           <div className="bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
             
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-              <div className="flex gap-2">
-                <span className="bg-slate-900 dark:bg-white text-white dark:text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                  {DEVICE_ICONS[selectedTut.device?.toLowerCase() === "pc" ? "pc" : "mobile"]} {selectedTut.device}
-                </span>
-                <span className="bg-yellow-500 text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                  {PLATFORM_ICONS[selectedTut.type]} {selectedTut.type === "text" ? "Tài liệu" : selectedTut.type}
-                </span>
-              </div>
+            <div className="flex items-center justify-end p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+              {/* Chỉ giữ lại nút Tắt X, dẹp hết các pill thiết bị/nền tảng */}
               <button onClick={() => setSelectedTut(null)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
                 <X className="w-6 h-6 text-slate-500" />
               </button>
@@ -376,8 +367,14 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
             <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-6">
               
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-4">{selectedTut.title}</h2>
-                <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-400">
+                {/* Đặt thẳng icon PC/Mobile cạnh tiêu đề to, bỏ cái khung bao quanh */}
+                <h2 className="flex items-start md:items-center gap-3 text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-4">
+                  <span className="shrink-0 text-slate-800 dark:text-slate-200 mt-1 md:mt-0">
+                    {DEVICE_ICONS[selectedTut.device?.toLowerCase() === "pc" ? "pc" : "mobile"]}
+                  </span>
+                  <span>{selectedTut.title}</span>
+                </h2>
+                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
                     <User className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
                     <span className="text-slate-900 dark:text-white font-bold">{selectedTut.author}</span>
@@ -396,60 +393,33 @@ export default function CodeClient({ initialData }: { initialData: CodeTutorial[
                 </div>
               )}
 
-              {selectedTut.videoUrl && (getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)) && (
-                <div className="space-y-3">
-                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-wide">
-                    <Video className="w-5 h-5 text-red-500" /> Video Hướng dẫn
-                  </h3>
-                  <div className={`w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-white/10 bg-black ${getYoutubeEmbedUrl(selectedTut.videoUrl) ? 'aspect-video' : 'aspect-[9/16] max-w-xs mx-auto'}`}>
-                    <iframe 
-                      width="100%" height="100%" 
-                      src={getYoutubeEmbedUrl(selectedTut.videoUrl) || getTiktokEmbedUrl(selectedTut.videoUrl)!} 
-                      frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen>
-                    </iframe>
-                  </div>
-                </div>
-              )}
-
-              {/* ---------- START KHU VỰC NÚT BẤM FB & TIKTOK ---------- */}
-                <div className="flex flex-col gap-4 w-full">
-                  {selectedTut.facebookUrl && (
-                    <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <SiFacebook className="w-10 h-10 text-[#0866FF] shrink-0" />
-                        <div>
-                          <h3 className="text-lg font-black text-slate-900 dark:text-white">Thảo luận trên Facebook</h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">Bấm vào đây để xem chi tiết bài hướng dẫn, hình ảnh và bình luận.</p>
-                        </div>
-                      </div>
-                      <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer">
-                        <Button className="bg-[#0866FF] hover:bg-[#0866FF]/90 text-white font-bold rounded-xl h-12 px-6 shadow-lg shadow-blue-500/20">
-                          Xem bài viết <ExternalLink className="ml-2 w-4 h-4" />
-                        </Button>
-                      </a>
-                    </div>
+              <div className="flex flex-col gap-3 w-full mt-4">
+                  
+                  {selectedTut.videoUrl && (selectedTut.videoUrl.toLowerCase().includes('youtube') || selectedTut.videoUrl.toLowerCase().includes('youtu.be')) && (
+                    <a href={selectedTut.videoUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold rounded-2xl h-14 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95">
+                        <SiYoutube className="w-6 h-6" /> Xem video trên YouTube
+                      </Button>
+                    </a>
                   )}
 
                   {selectedTut.tiktokUrl && (
-                    <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center shrink-0">
-                           <SiTiktok className="w-6 h-6 text-white dark:text-black" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-black text-slate-900 dark:text-white">Xem video trên TikTok</h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">Xem video hướng dẫn trực quan trên nền tảng TikTok.</p>
-                        </div>
-                      </div>
-                      <a href={selectedTut.tiktokUrl} target="_blank" rel="noopener noreferrer">
-                        <Button className="bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white font-bold rounded-xl h-12 px-6 shadow-lg">
-                          Xem Video <ExternalLink className="ml-2 w-4 h-4" />
-                        </Button>
-                      </a>
-                    </div>
+                    <a href={selectedTut.tiktokUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button className="w-full bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white font-bold rounded-2xl h-14 shadow-lg flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95">
+                        <SiTiktok className="w-5 h-5" /> Xem video trên TikTok
+                      </Button>
+                    </a>
                   )}
-                </div>
-                {/* ---------- END KHU VỰC NÚT BẤM FB & TIKTOK ---------- */}
+
+                  {selectedTut.facebookUrl && (
+                    <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button className="w-full bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold rounded-2xl h-14 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95">
+                        <SiFacebook className="w-5 h-5" /> Xem bài viết trên Facebook
+                      </Button>
+                    </a>
+                  )}
+
+              </div>
 
             </div>
           </div>

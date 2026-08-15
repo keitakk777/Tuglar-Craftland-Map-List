@@ -55,7 +55,7 @@ function parseCSV(str: string) {
 export async function getBannerData(): Promise<EventBannerData[]> {
   try {
     // 🎯 Link Sheet Tab "Banner Web" (Đã thay ID mới nhất của bạn)
-    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1652673201&single=true&output=csv"; 
+    const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-n_jJ0_gFVWcF78Y6GCuX_ab3EeE8_F6dlI82srPqpWDaaTTpdoCFlNZeoP3sq39Y0UXcseOXAIgD/pub?gid=1542007735&single=true&output=csv"; 
     
     const res = await fetch(CSV_LINK, { cache: 'no-store' });
     const csvText = await res.text();

@@ -396,7 +396,7 @@ export default function CodeClient({ initialData = [] }: { initialData: CodeTuto
                   )}
                   {selectedTut.facebookUrl && (
                     <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-                      <Button className="w-full bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold rounded-2xl h-14 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiFacebook className="w-5 h-5" /> Thảo luận trên Facebook</Button>
+                      <Button className="w-full bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold rounded-2xl h-14 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiFacebook className="w-5 h-5" /> Xem bài viết đầy đủ trên Facebook</Button>
                     </a>
                   )}
               </div>

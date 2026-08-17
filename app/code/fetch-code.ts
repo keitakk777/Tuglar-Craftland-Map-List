@@ -8,8 +8,9 @@ export interface CodeTutorial {
   title: string;
   description: string;
   thumbnail: string;
+  images: string[];    // <-- BỔ SUNG: Mảng chứa nhiều link ảnh
   facebookUrl: string;
-  tiktokUrl: string;   // <-- BỔ SUNG CỘT TIKTOK
+  tiktokUrl: string;
   videoUrl: string;
   type: string;        
   device: string;      
@@ -19,18 +20,18 @@ export interface CodeTutorial {
 const ERROR_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'%3E%3Crect width='800' height='400' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='20' font-weight='bold' fill='%2364748b' text-anchor='middle'%3EThumbnail%3C/text%3E%3C/svg%3E";
 
 export function getDirectImageUrl(rawUrl: string) {
-  if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return ERROR_IMAGE;
-  if (rawUrl.includes("googleusercontent.com") || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) return rawUrl;
+  if (!rawUrl || rawUrl === "undefined" || rawUrl === "") return "";
+  if (rawUrl.includes("googleusercontent.com") || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) return rawUrl.trim();
   const driveRegex = /\/d\/([a-zA-Z0-9_-]+)/;
   const match = rawUrl.match(driveRegex);
   if (match && match[1]) return "https://lh3.googleusercontent.com/d/" + match[1];
-  return rawUrl;
+  return rawUrl.trim();
 }
 
 function getAutoThumbnail(videoUrl: string, platform: string, currentThumb: string) {
-  if (currentThumb && currentThumb !== "undefined" && currentThumb !== "" && currentThumb !== "NaN") {
-    return getDirectImageUrl(currentThumb);
-  }
+  const parsedThumb = getDirectImageUrl(currentThumb);
+  if (parsedThumb && parsedThumb !== ERROR_IMAGE) return parsedThumb;
+  
   if (platform === "youtube" && videoUrl) {
     const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&"'>]+)/);
     if (ytMatch && ytMatch[1]) {
@@ -40,7 +41,6 @@ function getAutoThumbnail(videoUrl: string, platform: string, currentThumb: stri
   return ERROR_IMAGE;
 }
 
-// Nâng cấp bộ đọc CSV
 function parseCSV(str: string) {
   let delimiter = ",";
   const firstLine = str.split('\n')[0] || "";
@@ -105,9 +105,10 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
     const idxTags = getIdx(["tags", "thẻ"]);
     const idxName = getIdx(["name", "tên"]);
     const idxDesc = getIdx(["mô tả", "description"]);
-    const idxThumb = getIdx(["thumbnail", "preview", "ảnh"]);
+    const idxThumb = getIdx(["thumbnail", "preview", "ảnh chính"]);
+    const idxImages = getIdx(["images", "ảnh chi tiết", "hình ảnh", "bộ ảnh"]); // <-- Tìm cột Nhiều ảnh
     const idxFb = getIdx(["facebook"]);
-    const idxTiktok = getIdx(["tiktok"]); // <-- Tìm vị trí cột Tiktok
+    const idxTiktok = getIdx(["tiktok"]); 
     const idxVid = getIdx(["yt hoặc tiktok", "youtube", "video", "yt"]); 
     const idxStatus = getIdx(["trạng thái", "status"]);
 
@@ -124,7 +125,6 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
       let tagsList = rawTags.split(",").map(t => t.trim()).filter(Boolean);
 
       let fbLink = idxFb >= 0 && row[idxFb] ? String(row[idxFb]).trim() : "";
-      // Đọc link Tiktok riêng
       let ttLink = idxTiktok >= 0 && row[idxTiktok] ? String(row[idxTiktok]).trim() : "";
       let vidLink = idxVid >= 0 && row[idxVid] ? String(row[idxVid]).trim() : "";
       
@@ -142,6 +142,12 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
 
       let rawThumb = idxThumb >= 0 && row[idxThumb] ? String(row[idxThumb]).trim() : "";
       let finalThumbnail = getAutoThumbnail(vidLink || ttLink, platformType, rawThumb);
+      if (!finalThumbnail) finalThumbnail = ERROR_IMAGE;
+
+      // 🎯 XỬ LÝ MẢNG HÌNH ẢNH CHI TIẾT
+      let rawImages = idxImages >= 0 && row[idxImages] ? String(row[idxImages]) : "";
+      // Tách bằng dấu phẩy, chấm phẩy hoặc xuống dòng
+      let imagesList = rawImages.split(/[,;\n]/).map(link => getDirectImageUrl(link.trim())).filter(link => link !== "");
 
       let deviceType = idxDevice >= 0 && row[idxDevice] ? String(row[idxDevice]).trim() : "Mobile";
 
@@ -153,8 +159,9 @@ export async function getCodeTutorials(): Promise<CodeTutorial[]> {
         title: rawTitle,
         description: idxDesc >= 0 && row[idxDesc] ? String(row[idxDesc]) : "",
         thumbnail: finalThumbnail,
+        images: imagesList,  // <-- Đẩy mảng ảnh vào
         facebookUrl: fbLink,
-        tiktokUrl: ttLink, // <-- Thêm vào mảng data
+        tiktokUrl: ttLink,
         videoUrl: vidLink,
         type: platformType,
         device: deviceType, 

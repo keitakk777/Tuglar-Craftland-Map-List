@@ -1,20 +1,26 @@
 "use client"
 import Link from "next/link"
-import { Gamepad2 } from "lucide-react"
 import { SiYoutube, SiTiktok, SiFacebook, SiInstagram } from "react-icons/si"
 
 export function Footer() {
+  // Đã sửa: Xóa comment có ngoặc nhọn ở đây, hoặc dùng // như thế này:
+  // 🎯 Thêm relative z-50 để ngăn chặn các lớp nền tàng hình đè lên Footer
   return (
-    <footer className="border-t border-border/50 bg-card/50 backdrop-blur-md">
+    <footer className="relative z-50 border-t border-border/50 bg-card/50 backdrop-blur-md">
       <div className="container mx-auto px-4 py-16">
-        {/* Đã chuyển sang bố cục flex chia 2 bên cho cân đối */}
+        {/* Các nội dung bên trong giữ nguyên */}
         <div className="flex flex-col md:flex-row justify-between items-start gap-12">
           
           {/* 1. BRAND & INTRO */}
           <div className="max-w-sm">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500 shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform">
-                <Gamepad2 className="h-6 w-6 text-black" />
+              {/* 🎯 Đã thay thế icon Gamepad bằng hình ảnh Logo custom */}
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500 shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform overflow-hidden p-1">
+                <img 
+                  src="/icon/icon short tuglar dark.png" 
+                  alt="Tuglar Logo" 
+                  className="h-7 w-full object-contain" 
+                />
               </div>
               <span className="text-xl font-bold tracking-tighter uppercase">Tuglar Craftland</span>
             </Link>

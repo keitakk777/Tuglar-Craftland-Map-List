@@ -339,68 +339,132 @@ export default function CodeClient({ initialData = [] }: { initialData: CodeTuto
         </SheetContent>
       </Sheet>
 
-      {/* POPUP CHI TIẾT BÀI HƯỚNG DẪN */}
+      {/* =======================================================================
+          POPUP CHI TIẾT BÀI HƯỚNG DẪN (TỰ ĐỘNG THÍCH ỨNG NỘI DUNG)
+          ======================================================================= */}
       {selectedTut && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 pt-24 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
-          <div className="relative bg-white dark:bg-[#0a0f1a] rounded-3xl w-full max-w-3xl h-[70vh] max-h-[85vh] overflow-hidden shadow-2xl flex flex-col ring-1 ring-slate-200 dark:ring-white/10" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setSelectedTut(null)} className="absolute top-4 right-4 md:top-5 md:right-5 z-50 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors shadow-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 pt-20 md:pt-24 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTut(null)}>
+          
+          {/* Khung Popup: Tự động co giãn dựa trên việc có nội dung bên phải hay không */}
+          <div 
+            className={`relative bg-white dark:bg-[#0a0f1a] rounded-3xl w-full overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-white/10 flex flex-col transition-all duration-300 ${
+              (selectedTut.description || (selectedTut.images && selectedTut.images.length > 0))
+                ? 'max-w-5xl h-[85vh] max-h-[85vh]' // Form to 2 cột nếu có ảnh/mô tả
+                : 'max-w-lg h-auto max-h-[85vh]'    // Form nhỏ gọn nếu chỉ có video
+            }`} 
+            onClick={e => e.stopPropagation()}
+          >
+            {/* NÚT CLOSE */}
+            <button onClick={() => setSelectedTut(null)} className="absolute top-4 right-4 md:top-5 md:right-5 z-50 p-2.5 rounded-xl bg-slate-100/80 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-md transition-colors shadow-sm">
               <X className="w-5 h-5 text-slate-700 dark:text-slate-300" />
             </button>
-            <div className="overflow-y-auto flex-grow p-6 pt-16 md:p-8 md:pt-16 space-y-6">
-              <div>
-                <h2 className="flex items-start md:items-center gap-3 text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-4 pr-12">
-                  <span className="shrink-0 text-slate-800 dark:text-slate-200 mt-1 md:mt-0">{DEVICE_ICONS[selectedTut.device?.toLowerCase() === "pc" ? "pc" : "mobile"]}</span>
-                  <span>{selectedTut.title}</span>
-                </h2>
-                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400">
-                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
-                    <User className="w-4 h-4 text-yellow-600 dark:text-yellow-500" /> <span className="text-slate-900 dark:text-white font-bold">{selectedTut.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10">
-                    <Calendar className="w-4 h-4 text-blue-500" /> <span>{selectedTut.date}</span>
-                  </div>
-                </div>
-              </div>
-              {selectedTut.description && (
-                <div className="bg-yellow-50 dark:bg-yellow-500/5 p-5 rounded-2xl border border-yellow-200 dark:border-yellow-500/20 flex gap-4">
-                  <AlignLeft className="w-6 h-6 text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{selectedTut.description}</p>
-                </div>
-              )}
-              {selectedTut.images && selectedTut.images.length > 0 && (
-                <div className="mt-6 w-full">
-                  <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Hình ảnh chi tiết</h3>
-                  <div className="flex w-full gap-3 overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-                    {selectedTut.images.map((img, idx) => (
-                      <div key={idx} onClick={() => setFullscreenImageIdx(idx)} className="cursor-zoom-in shrink-0 w-72 md:w-96 aspect-video relative rounded-2xl overflow-hidden shadow-md border border-slate-200 dark:border-white/10 snap-center group bg-black/5 dark:bg-white/5 block">
-                        <img src={img} alt={`Chi tiết ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider flex items-center gap-1.5 shadow-lg group-hover:bg-yellow-500 group-hover:text-black transition-colors pointer-events-none">
-                          <ZoomIn className="w-4 h-4" /> PHÓNG TO
-                        </div>
+
+            {/* CHIA GRID NẾU FORM TO, DÙNG FLEX NẾU FORM NHỎ */}
+            <div className={`w-full ${
+              (selectedTut.description || (selectedTut.images && selectedTut.images.length > 0))
+                ? 'flex flex-col md:grid md:grid-cols-12 h-full'
+                : 'flex flex-col p-6 pt-16 md:p-8 md:pt-16'
+            }`}>
+              
+              {/* CỘT TRÁI (Hoặc Toàn bộ nội dung nếu ở Form nhỏ) */}
+              <div className={`flex flex-col ${
+                (selectedTut.description || (selectedTut.images && selectedTut.images.length > 0))
+                  ? 'md:col-span-5 p-6 pt-16 md:p-8 md:pt-10 border-b md:border-b-0 md:border-r border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-transparent h-auto md:h-full md:overflow-y-auto custom-scrollbar shrink-0'
+                  : 'w-full'
+              }`}>
+                
+                <div className="mb-auto">
+                  {/* Đã thêm mt-1 md:mt-1.5 để đẩy Icon xuống cho bằng với dòng chữ đầu tiên */}
+                  <h2 className="flex items-start gap-3 text-xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight mb-6 pr-8 md:pr-4">
+                    <span className="shrink-0 text-slate-800 dark:text-slate-200 mt-1 md:mt-1.5">
+                      {DEVICE_ICONS[selectedTut.device?.toLowerCase() === "pc" ? "pc" : "mobile"]}
+                    </span>
+                    <span>{selectedTut.title}</span>
+                  </h2>
+                  
+                  {/* Xếp dọc (flex-col) nếu ở giao diện to, xếp ngang (flex-row) nếu ở giao diện nhỏ */}
+                  <div className={`flex ${
+                    (selectedTut.description || (selectedTut.images && selectedTut.images.length > 0))
+                      ? 'flex-col gap-3'
+                      : 'flex-row flex-wrap gap-4'
+                  }`}>
+                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm w-fit">
+                      <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-500/20 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
                       </div>
-                    ))}
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Creator</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white leading-none">{selectedTut.author}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm w-fit">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cập nhật</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white leading-none">{selectedTut.date}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-              <div className="flex flex-col gap-3 w-full mt-4">
-                  {selectedTut.videoUrl && (selectedTut.videoUrl.toLowerCase().includes('youtube') || selectedTut.videoUrl.toLowerCase().includes('youtu.be')) && (
-                    <a href={selectedTut.videoUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-                      <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold rounded-2xl h-14 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiYoutube className="w-6 h-6" /> Xem video trên YouTube</Button>
-                    </a>
-                  )}
-                  {selectedTut.tiktokUrl && (
-                    <a href={selectedTut.tiktokUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-                      <Button className="w-full bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white font-bold rounded-2xl h-14 shadow-lg flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiTiktok className="w-5 h-5" /> Xem video trên TikTok</Button>
-                    </a>
-                  )}
-                  {selectedTut.facebookUrl && (
-                    <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-                      <Button className="w-full bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold rounded-2xl h-14 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiFacebook className="w-5 h-5" /> Xem bài viết đầy đủ trên Facebook</Button>
-                    </a>
-                  )}
+
+                <div className="flex flex-col gap-3 w-full mt-8 md:mt-12">
+                    {selectedTut.videoUrl && (selectedTut.videoUrl.toLowerCase().includes('youtube') || selectedTut.videoUrl.toLowerCase().includes('youtu.be')) && (
+                      <a href={selectedTut.videoUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                        <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold rounded-2xl h-14 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiYoutube className="w-6 h-6" /> Xem video trên YouTube</Button>
+                      </a>
+                    )}
+                    {selectedTut.tiktokUrl && (
+                      <a href={selectedTut.tiktokUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                        <Button className="w-full bg-black hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 dark:text-black text-white font-bold rounded-2xl h-14 shadow-lg flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiTiktok className="w-5 h-5" /> Xem video trên TikTok</Button>
+                      </a>
+                    )}
+                    {selectedTut.facebookUrl && (
+                      <a href={selectedTut.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                        <Button className="w-full bg-[#0866FF] hover:bg-[#0756D8] text-white font-bold rounded-2xl h-14 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-sm md:text-base transition-transform active:scale-95"><SiFacebook className="w-5 h-5" /> Thảo luận trên Facebook</Button>
+                      </a>
+                    )}
+                </div>
               </div>
+
+              {/* CỘT PHẢI: MÔ TẢ & THƯ VIỆN ẢNH (Chỉ Render ra nếu có dữ liệu) */}
+              {(selectedTut.description || (selectedTut.images && selectedTut.images.length > 0)) && (
+                <div className="md:col-span-7 overflow-y-auto p-6 md:p-8 h-full pb-20 custom-scrollbar">
+                  
+                  {selectedTut.description && (
+                    <div className="bg-yellow-50 dark:bg-yellow-500/5 p-5 md:p-6 rounded-3xl border border-yellow-200 dark:border-yellow-500/20 flex gap-4 mb-8">
+                      <AlignLeft className="w-6 h-6 text-yellow-600 dark:text-yellow-500 shrink-0 mt-1" />
+                      <p className="text-sm md:text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{selectedTut.description}</p>
+                    </div>
+                  )}
+
+                  {selectedTut.images && selectedTut.images.length > 0 && (
+                    <div className="w-full">
+                      <h3 className="text-xs md:text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 md:mb-6 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" />
+                        Tài liệu đính kèm ({selectedTut.images.length})
+                      </h3>
+                      
+                      <div className="flex flex-col gap-6 md:gap-8 w-full">
+                        {selectedTut.images.map((img, idx) => (
+                          <div key={idx} onClick={() => setFullscreenImageIdx(idx)} className="cursor-zoom-in w-full relative rounded-2xl md:rounded-3xl overflow-hidden shadow-md border border-slate-200 dark:border-white/10 group bg-black/5 dark:bg-white/5 block">
+                            <img src={img} alt={`Chi tiết ${idx + 1}`} className="w-full h-auto object-contain md:object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-black tracking-wider flex items-center gap-2 shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                              <ZoomIn className="w-4 h-4" /> PHÓNG TO CHI TIẾT
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       )}

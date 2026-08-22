@@ -1,9 +1,11 @@
+// app/events/event-client.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, Trophy, Users, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
+// 🎯 Đã import thêm ChevronLeft và ChevronRight cho các mũi tên
+import { Calendar, Clock, Trophy, Users, CheckCircle2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { EventBannerData } from "./fetch-banner"
 
@@ -56,7 +58,6 @@ const parseDateStr = (str: string, fallbackYear: number) => {
     if (dStr.includes(' ')) dStr = dStr.split(' ').pop() || dStr;
     dStr = dStr.trim();
     
-    // Loại bỏ các chữ cái (VD: 23h59)
     dStr = dStr.replace(/[a-zA-Z]/g, '');
 
     const parts = dStr.split('/');
@@ -73,10 +74,35 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
   const [progressWidth, setProgressWidth] = useState("0%");
   const [passedNodes, setPassedNodes] = useState<boolean[]>([]);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  
+  // 🎯 Ref dùng để điều khiển thanh cuộn của "Các sự kiện khác"
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   if (!events || events.length === 0) return null;
   const activeEvent = events[activeIndex];
   if (!activeEvent) return null;
+
+  // 🎯 Các hàm điều hướng sự kiện cho Banner chính
+  const handlePrevEvent = () => {
+    setActiveIndex((prev) => (prev === 0 ? events.length - 1 : prev - 1));
+  };
+
+  const handleNextEvent = () => {
+    setActiveIndex((prev) => (prev === events.length - 1 ? 0 : prev + 1));
+  };
+
+  // 🎯 Các hàm cuộn danh sách cho banner nhỏ
+  const scrollPrev = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     if (!activeEvent.milestones || activeEvent.milestones.length === 0) {
@@ -116,6 +142,7 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
       
       <div className="container relative mx-auto px-4 pb-12 pt-28 md:pt-36">
         
+        {/* MOBILE VIEW */}
         <div className="block lg:hidden mb-5 text-center">
             <Badge variant="outline" className="mb-4 border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest text-[10px]">
               {activeEvent.tag || "Sự kiện"}
@@ -129,7 +156,11 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
             </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 items-start">
+        {/* 🎯 CHỈNH ĐỘ GIÃN Ở ĐÂY: Thuộc tính `lg:gap-16` quyết định khoảng cách giữa Cột Trái (Ảnh) và Cột Phải (Chữ). 
+            (Mặc định cũ là lg:gap-12, mình đã tăng lên 16 cho thoáng hơn, nếu bạn muốn gần lại thì hạ xuống lg:gap-10) */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-16 items-start">
+          
+          {/* CỘT TRÁI: ẢNH BANNER & TIẾN TRÌNH */}
           <div className="w-full lg:w-1/2 flex flex-col gap-6 relative z-10 shrink-0">
             <div className="relative aspect-[16/9] md:aspect-video overflow-hidden rounded-3xl border border-yellow-500/30 bg-card shadow-2xl group">
               <AnimatePresence mode="wait">
@@ -139,13 +170,27 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Banner" 
                 />
               </AnimatePresence>
+              
               <div className="absolute left-4 top-4">
                 <Badge className={`${activeEvent.status === "Đã kết thúc" ? "bg-muted-foreground text-white" : "bg-destructive text-white"} border-none shadow-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wider`}>
                   {activeEvent.status}
                 </Badge>
               </div>
+
+              {/* 🎯 NÚT ĐIỀU HƯỚNG MAIN BANNER (PREV/NEXT) */}
+              <div className="absolute inset-y-0 left-2 md:left-4 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                <button onClick={(e) => { e.stopPropagation(); handlePrevEvent(); }} className="p-2 md:p-3 bg-black/50 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-colors shadow-lg border border-white/10 hover:border-yellow-400">
+                  <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+              </div>
+              <div className="absolute inset-y-0 right-2 md:right-4 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                <button onClick={(e) => { e.stopPropagation(); handleNextEvent(); }} className="p-2 md:p-3 bg-black/50 hover:bg-yellow-500 text-white hover:text-black rounded-full backdrop-blur-md transition-colors shadow-lg border border-white/10 hover:border-yellow-400">
+                  <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+              </div>
             </div>
 
+            {/* THANH TIẾN TRÌNH */}
             {activeEvent.milestones && activeEvent.milestones.length > 0 && (
               <div className="w-full p-5 bg-muted/20 rounded-3xl border border-white/5 backdrop-blur-md">
                 <div className="relative w-full">
@@ -173,6 +218,7 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
               </div>
             )}
 
+            {/* MOBILE ONLY: DANH SÁCH BÀI NHỎ & NÚT THAM GIA */}
             <div className="block lg:hidden w-full overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden mt-2">
                <div className="flex gap-3">
                 {events.map((event, index) => (
@@ -190,16 +236,21 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
             </div>
           </div>
           
+          {/* CỘT PHẢI: NỘI DUNG VÀ DANH SÁCH */}
           <div className="hidden lg:flex flex-col lg:w-1/2 flex-1 relative z-10 h-full">
+            
+            {/* 🎯 CHỈNH ĐỘ GIÃN Ở ĐÂY: Thuộc tính `gap-8` bên dưới điều chỉnh khoảng cách giữa Tiêu đề - Ô thông số - Nút Bấm. (Cũ là gap-6) */}
             <div className="w-full flex-1">
               <AnimatePresence mode="wait">
-                <motion.div key={activeEvent.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col gap-6">
+                <motion.div key={activeEvent.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col gap-8">
                   <div>
                     <Badge variant="outline" className="w-fit border-yellow-500/50 text-yellow-600 bg-yellow-500/10 font-bold uppercase tracking-widest mb-4">{activeEvent.tag || "Sự kiện"}</Badge>
                     <h1 className="whitespace-pre-line text-balance text-4xl font-black leading-tight uppercase mb-2">{activeEvent.title}</h1>
                     <p className="text-pretty text-muted-foreground whitespace-pre-line text-base leading-relaxed mt-4">{activeEvent.description}</p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 mb-4">
+                  
+                  {/* Ô THÔNG SỐ */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                     <div className="bg-card border border-white/5 p-4 rounded-2xl flex flex-col justify-center gap-1 shadow-sm">
                         <Trophy className="h-5 w-5 text-yellow-500 mb-1" />
                         <p className="text-xl font-black">{activeEvent.prize}</p>
@@ -221,7 +272,9 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Còn lại</p>
                     </div>
                   </div>
-                  <div className="mt-2">
+
+                  {/* NÚT BẤM */}
+                  <div>
                     <a href={activeEvent.actionLink || "#"} target="_blank" rel="noopener noreferrer">
                       <Button size="lg" className="w-fit min-w-[200px] bg-yellow-500 hover:bg-yellow-600 text-black font-black uppercase tracking-wider rounded-2xl h-14 px-10 shadow-xl">{activeEvent.actionText || "Tham gia ngay"}</Button>
                     </a>
@@ -230,9 +283,24 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
               </AnimatePresence>
             </div>
 
-            <div className="w-full shrink-0 pt-8 border-t border-white/5 mt-10">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Các sự kiện khác</h3>
-              <div className="flex w-full gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
+            {/* 🎯 CHỈNH ĐỘ GIÃN Ở ĐÂY: Thuộc tính `mt-12` đẩy nguyên cụm "Các sự kiện khác" ra xa Nút bấm ở trên. (Cũ là mt-10) */}
+            <div className="w-full shrink-0 pt-8 border-t border-slate-200 dark:border-white/5 mt-12">
+              
+              {/* TIÊU ĐỀ & NÚT CUỘN */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Các sự kiện khác</h3>
+                <div className="flex gap-2">
+                  <button onClick={scrollPrev} className="p-1.5 rounded-full bg-slate-100 dark:bg-muted/50 hover:bg-yellow-500 hover:text-black transition-colors text-slate-500">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button onClick={scrollNext} className="p-1.5 rounded-full bg-slate-100 dark:bg-muted/50 hover:bg-yellow-500 hover:text-black transition-colors text-slate-500">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* KHUNG CUỘN DANH SÁCH (Được ghim `ref`) */}
+              <div ref={scrollContainerRef} className="flex w-full gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden scroll-smooth">
                 {events.map((event, index) => (
                     <div key={event.id || index} onClick={() => setActiveIndex(index)} className={`shrink-0 w-36 aspect-[16/9] relative cursor-pointer overflow-hidden rounded-xl transition-all ${activeIndex === index ? 'ring-2 ring-yellow-500 scale-95' : 'opacity-40 hover:opacity-100'}`}>
                       <img src={event.image || "/placeholder.jpg"} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -243,6 +311,7 @@ export function EventClient({ events = [] }: { events: EventBannerData[] }) {
                 ))}
               </div>
             </div>
+
           </div>
         </div>
       </div>
